@@ -22,40 +22,18 @@
                 </form>
 
                 <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h2 class="text-lg font-semibold mb-2">50/30/20 Planner</h2>
+                    <h2 class="text-lg font-semibold mb-2">Finance Distribution</h2>
                     <div id="results" class="hidden">
                         <div class="grid grid-cols-1 gap-2">
                             <div class="bg-blue-100 p-3 rounded-md cursor-pointer" onclick="showModal('needs')">
-                                <h3 class="text-sm font-semibold mb-2">50% Needs: <span id="needsAmount">0</span></h3>
-                                <div id="emiDeduction" class="hidden text-xs space-y-1">
-                                    <div class="bg-white bg-opacity-60 p-2 rounded">
-                                        <div class="flex justify-between">
-                                            <span>Daily Living:</span>
-                                            <span id="everydayAmount" class="font-medium">0</span>
-                                        </div>
-                                        <div class="flex justify-between text-red-600">
-                                            <span>Loan EMI:</span>
-                                            <span id="emiDeduct" class="font-medium">0</span>
-                                        </div>
-                                        <hr class="my-1 border-gray-300">
-                                        <div class="flex justify-between font-semibold">
-                                            <span>Total Usage:</span>
-                                            <span id="plannedUsage">0</span>
-                                        </div>
-                                    </div>
-                                    <div class="bg-white bg-opacity-60 p-2 rounded">
-                                        <div class="flex justify-between">
-                                            <span>Reserve Left:</span>
-                                            <span id="adjNeeds" class="font-medium">0</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <h3 class="text-sm font-semibold mb-2">Needs (50%)</h3>
+                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated50">0</span> &nbsp;|&nbsp; Actual: <span id="actual50">0</span> &nbsp;|&nbsp; Difference: <span id="difference50" class="font-medium">0</span></div>
                             </div>
                             <div class="bg-green-100 p-2 rounded-md cursor-pointer" onclick="showModal('wants')">
-                                <h3 class="text-sm font-semibold">30% Wants: <span id="wantsAmount">0</span></h3>
+                                <h3 class="text-sm font-semibold">Wants (30%): <span id="wantsAmount">0</span></h3>
                             </div>
                             <div class="bg-yellow-100 p-2 rounded-md cursor-pointer" onclick="showModal('savings')">
-                                <h3 class="text-sm font-semibold">20% Savings/Debt: <span id="savingsAmount">0</span></h3>
+                                <h3 class="text-sm font-semibold">Savings/Debt (20%): <span id="savingsAmount">0</span></h3>
                             </div>
                         </div>
                     </div>
@@ -115,7 +93,7 @@
                         <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-green-100 hover:bg-green-200 text-green-800">
                             <div class="text-left">
                                 <div class="text-lg font-semibold">30 Planner (Wants)</div>
-                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated30">0</span> &nbsp;|&nbsp; Actual: <span id="actual30">0</span></div>
+                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated30">0</span> &nbsp;|&nbsp; Actual: <span id="actual30">0</span> &nbsp;|&nbsp; Difference: <span id="difference30" class="font-medium">0</span></div>
                             </div>
                             <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
@@ -128,7 +106,7 @@
                         <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-yellow-100 hover:bg-yellow-200 text-yellow-800">
                             <div class="text-left">
                                 <div class="text-lg font-semibold">20 Planner (Savings)</div>
-                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated20">0</span> &nbsp;|&nbsp; Actual: <span id="actual20">0</span></div>
+                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated20">0</span> &nbsp;|&nbsp; Actual: <span id="actual20">0</span> &nbsp;|&nbsp; Difference: <span id="difference20" class="font-medium">0</span></div>
                             </div>
                             <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>

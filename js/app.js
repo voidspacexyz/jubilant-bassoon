@@ -432,6 +432,48 @@ document.addEventListener('DOMContentLoaded', () => {
         qsa('#everydayAmount').forEach(el=>el.textContent = fmt(items.find(i=>i.id==='living')?.value || 0));
         qsa('#adjNeeds').forEach(el=>el.textContent = fmt(remaining));
         saveState();
+
+        // Update differences for 30 and 20 as they use same borrowed values per requirement
+        const salaryVal = salary || 0;
+        const allocated30Val = Math.round(salaryVal * 0.3);
+        const allocated20Val = Math.round(salaryVal * 0.2);
+        // For this change, we borrow same values for each accordion: use actual50Value for others' actuals
+        const actual30Val = actual50Value;
+        const actual20Val = actual50Value;
+
+        // Update DOM
+        qsa('#allocated30').forEach(el=>el.textContent = fmt(allocated30Val));
+        qsa('#allocated20').forEach(el=>el.textContent = fmt(allocated20Val));
+        qsa('#actual30').forEach(el=>el.textContent = fmt(actual30Val));
+        qsa('#actual20').forEach(el=>el.textContent = fmt(actual20Val));
+
+        // Differences
+        const diff30 = Math.round(allocated30Val - actual30Val);
+        const diff20 = Math.round(allocated20Val - actual20Val);
+
+        const diff30El = qs('#difference30');
+        if(diff30El){
+            diff30El.textContent = fmt(diff30);
+            if(diff30 < 0){
+                diff30El.classList.remove('text-green-600');
+                diff30El.classList.add('text-red-700','font-bold');
+            } else {
+                diff30El.classList.remove('text-red-700','font-bold');
+                diff30El.classList.add('text-green-600');
+            }
+        }
+
+        const diff20El = qs('#difference20');
+        if(diff20El){
+            diff20El.textContent = fmt(diff20);
+            if(diff20 < 0){
+                diff20El.classList.remove('text-green-600');
+                diff20El.classList.add('text-red-700','font-bold');
+            } else {
+                diff20El.classList.remove('text-red-700','font-bold');
+                diff20El.classList.add('text-green-600');
+            }
+        }
     }
 
     // EMI calculations
