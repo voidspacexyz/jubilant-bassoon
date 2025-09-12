@@ -1,0 +1,10 @@
+/* Custom styles for Money Planner - minimal overrides and helper classes */
+
+/* Ensure modal translates are manageable via classes toggled in JS */
+.translate-x-full { transform: translateX(100%); }
+.translate-x-0 { transform: translateX(0); }
+
+/* Smooth scrolling for the sidebar modal */
+#modal { transition: transform 0.3s ease-in-out; }
+
+/* Small responsive tweaks can be added here */
