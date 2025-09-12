@@ -67,8 +67,11 @@
                     <!-- Accordion: each body is hidden by default -->
                     <div class="border rounded overflow-hidden bg-white">
                         <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-blue-100 hover:bg-blue-200 text-blue-800">
-                            <span class="text-lg font-semibold">50 Planner (Needs)</span>
-                            <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            <div class="text-left">
+                                <div class="text-lg font-semibold">50 Planner (Needs)</div>
+                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated50">0</span> &nbsp;|&nbsp; Actual: <span id="actual50">0</span></div>
+                            </div>
+                             <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div class="accordion-body hidden p-4">
                             <div id="loanForm">
@@ -93,7 +96,10 @@
 
                     <div class="border rounded overflow-hidden bg-white">
                         <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-green-100 hover:bg-green-200 text-green-800">
-                            <span class="text-lg font-semibold">30 Planner (Wants)</span>
+                            <div class="text-left">
+                                <div class="text-lg font-semibold">30 Planner (Wants)</div>
+                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated30">0</span> &nbsp;|&nbsp; Actual: <span id="actual30">0</span></div>
+                            </div>
                             <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div class="accordion-body hidden p-4">
@@ -103,7 +109,10 @@
 
                     <div class="border rounded overflow-hidden bg-white">
                         <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-yellow-100 hover:bg-yellow-200 text-yellow-800">
-                            <span class="text-lg font-semibold">20 Planner (Savings)</span>
+                            <div class="text-left">
+                                <div class="text-lg font-semibold">20 Planner (Savings)</div>
+                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated20">0</span> &nbsp;|&nbsp; Actual: <span id="actual20">0</span></div>
+                            </div>
                             <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div class="accordion-body hidden p-4">
@@ -284,9 +293,49 @@
                 document.getElementById('needsAmount').textContent = formatIN(needs);
                 document.getElementById('wantsAmount').textContent = formatIN(wants);
                 document.getElementById('savingsAmount').textContent = formatIN(savings);
+                // update allocated display in accordion headers
+                const alloc50El = document.getElementById('allocated50'); if (alloc50El) alloc50El.textContent = formatIN(needs);
+                const alloc30El = document.getElementById('allocated30'); if (alloc30El) alloc30El.textContent = formatIN(wants);
+                const alloc20El = document.getElementById('allocated20'); if (alloc20El) alloc20El.textContent = formatIN(savings);
+                // update actuals for planners that currently have values
+                // 30 has no inputs yet so actual is 0
+                updatePlannerActual('30', wants, 0);
                 results.classList.remove('hidden');
             } else {
                 results.classList.add('hidden');
+                // reset allocated/actual displays
+                ['allocated50','allocated30','allocated20','actual50','actual30','actual20'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = formatIN(0);
+                });
+            }
+        }
+
+        // helper to style actual value based on allocated vs actual
+        function updatePlannerActual(prefix, allocatedVal, actualVal) {
+            const actualId = 'actual' + prefix;
+            const el = document.getElementById(actualId);
+            if (!el) return;
+            // format
+            el.textContent = formatIN(actualVal);
+            // clear classes
+            el.classList.remove('text-red-600','font-bold','text-green-600','text-orange-600');
+
+            if (allocatedVal <= 0) {
+                // no allocated value, neutral
+                return;
+            }
+
+            const diff = allocatedVal - actualVal;
+            if (diff < 0) {
+                // actual more than allocated -> red bold
+                el.classList.add('text-red-600','font-bold');
+            } else if (diff > allocatedVal * 0.2) {
+                // actual much lower than allocated (>20%) -> green
+                el.classList.add('text-green-600');
+            } else {
+                // between 0 and 20% -> orange bold
+                el.classList.add('text-orange-600','font-bold');
             }
         }
 
@@ -330,6 +379,10 @@
                 const plannedUsage = everyday + emi;
                 plannedEl.textContent = formatIN(plannedUsage);
 
+                // update actual/allocated displays for 50 planner
+                const alloc50El = document.getElementById('allocated50'); if (alloc50El) alloc50El.textContent = formatIN(origNeeds);
+                updatePlannerActual('50', origNeeds, plannedUsage);
+
                 if (reserveAfter < 0) {
                     adjNeedsEl.classList.add('text-red-600', 'font-semibold');
                 } else {
@@ -343,6 +396,9 @@
             } else {
                 loanResults.classList.add('hidden');
                 emiDeduction.classList.add('hidden');
+                // reset actual 50 when loan not present
+                const origNeeds = currentSalary * 0.5;
+                updatePlannerActual('50', origNeeds, 0);
             }
         }
 
@@ -368,8 +424,16 @@
                 document.getElementById('sipReturns').textContent = formatIN(returns);
 
                 sipResults.classList.remove('hidden');
+
+                // update allocated/actual for 20 planner
+                const alloc20 = currentSalary * 0.2;
+                const alloc20El = document.getElementById('allocated20'); if (alloc20El) alloc20El.textContent = formatIN(alloc20);
+                updatePlannerActual('20', alloc20, totalInvested);
             } else {
                 sipResults.classList.add('hidden');
+                // reset actual20 when no sip
+                const alloc20 = currentSalary * 0.2;
+                updatePlannerActual('20', alloc20, 0);
             }
         }
 
@@ -545,8 +609,6 @@
                 }
             });
         });
-
-        // end accordion functionality
     </script>
 </body>
 </html>
