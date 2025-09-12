@@ -64,47 +64,63 @@
             <!-- Right column: 2/3 - scrollable stack with 50, 30, 20 planners -->
             <div class="md:col-span-2">
                 <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h2 class="text-lg font-semibold mb-2">50 Planner (Needs)</h2>
-                        <div id="loanForm">
-                            <label for="loanAmount" class="block text-sm font-medium text-gray-700">Loan Amount</label>
-                            <input type="text" id="loanAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter loan amount">
-                            <label for="tenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (months)</label>
-                            <input type="number" id="tenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in months" min="0" step="1">
-                            <label for="interestRate" class="block text-sm font-medium text-gray-700 mt-2">Interest Rate (%)</label>
-                            <input type="number" id="interestRate" step="0.01" min="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter interest rate">
-                            <label for="downpayment" class="block text-sm font-medium text-gray-700 mt-2">Downpayment</label>
-                            <input type="text" id="downpayment" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter downpayment">
-                        </div>
-                        <div id="loanResults" class="hidden mt-4">
-                            <h3 class="text-sm font-semibold mb-2">Loan Calculation</h3>
-                            <p class="text-sm font-bold text-blue-600">Monthly EMI: <span id="emiAmount">0</span></p>
-                            <p class="text-sm font-bold text-blue-600">Total Payment: <span id="totalPayment">0</span></p>
-                            <p class="text-sm">Principal: <span id="principalAmount">0</span></p>
-                            <p class="text-sm">Interest: <span id="interestAmount">0</span></p>
+                    <!-- Accordion: each body is hidden by default -->
+                    <div class="border rounded overflow-hidden bg-white">
+                        <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-blue-100 hover:bg-blue-200 text-blue-800">
+                            <span class="text-lg font-semibold">50 Planner (Needs)</span>
+                            <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="accordion-body hidden p-4">
+                            <div id="loanForm">
+                                <label for="loanAmount" class="block text-sm font-medium text-gray-700">Loan Amount</label>
+                                <input type="text" id="loanAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter loan amount">
+                                <label for="tenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (months)</label>
+                                <input type="number" id="tenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in months" min="0" step="1">
+                                <label for="interestRate" class="block text-sm font-medium text-gray-700 mt-2">Interest Rate (%)</label>
+                                <input type="number" id="interestRate" step="0.01" min="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter interest rate">
+                                <label for="downpayment" class="block text-sm font-medium text-gray-700 mt-2">Downpayment</label>
+                                <input type="text" id="downpayment" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter downpayment">
+                            </div>
+                            <div id="loanResults" class="hidden mt-4">
+                                <h3 class="text-sm font-semibold mb-2">Loan Calculation</h3>
+                                <p class="text-sm font-bold text-blue-600">Monthly EMI: <span id="emiAmount">0</span></p>
+                                <p class="text-sm font-bold text-blue-600">Total Payment: <span id="totalPayment">0</span></p>
+                                <p class="text-sm">Principal: <span id="principalAmount">0</span></p>
+                                <p class="text-sm">Interest: <span id="interestAmount">0</span></p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h2 class="text-lg font-semibold mb-2">30 Planner (Wants)</h2>
-                        <p class="text-sm text-gray-500">No items yet.</p>
+                    <div class="border rounded overflow-hidden bg-white">
+                        <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-green-100 hover:bg-green-200 text-green-800">
+                            <span class="text-lg font-semibold">30 Planner (Wants)</span>
+                            <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="accordion-body hidden p-4">
+                            <p class="text-sm text-gray-500">No items yet.</p>
+                        </div>
                     </div>
 
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h2 class="text-lg font-semibold mb-2">20 Planner (Savings)</h2>
-                        <div id="sipForm">
-                            <label for="sipAmount" class="block text-sm font-medium text-gray-700">Monthly SIP Amount</label>
-                            <input type="text" id="sipAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter monthly SIP amount">
-                            <label for="sipTenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (years)</label>
-                            <input type="number" id="sipTenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in years" min="0" step="1">
-                            <label for="sipReturn" class="block text-sm font-medium text-gray-700 mt-2">Expected Return (% annual)</label>
-                            <input type="number" id="sipReturn" step="0.01" min="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter expected return">
-                        </div>
-                        <div id="sipResults" class="hidden mt-4">
-                            <h3 class="text-sm font-semibold mb-2">SIP Projection</h3>
-                            <p class="text-sm">Future Value: <span id="futureValue">0</span></p>
-                            <p class="text-sm">Total Invested: <span id="totalInvested">0</span></p>
-                            <p class="text-sm">Returns: <span id="sipReturns">0</span></p>
+                    <div class="border rounded overflow-hidden bg-white">
+                        <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-yellow-100 hover:bg-yellow-200 text-yellow-800">
+                            <span class="text-lg font-semibold">20 Planner (Savings)</span>
+                            <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="accordion-body hidden p-4">
+                            <div id="sipForm">
+                                <label for="sipAmount" class="block text-sm font-medium text-gray-700">Monthly SIP Amount</label>
+                                <input type="text" id="sipAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter monthly SIP amount">
+                                <label for="sipTenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (years)</label>
+                                <input type="number" id="sipTenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in years" min="0" step="1">
+                                <label for="sipReturn" class="block text-sm font-medium text-gray-700 mt-2">Expected Return (% annual)</label>
+                                <input type="number" id="sipReturn" step="0.01" min="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter expected return">
+                            </div>
+                            <div id="sipResults" class="hidden mt-4">
+                                <h3 class="text-sm font-semibold mb-2">SIP Projection</h3>
+                                <p class="text-sm">Future Value: <span id="futureValue">0</span></p>
+                                <p class="text-sm">Total Invested: <span id="totalInvested">0</span></p>
+                                <p class="text-sm">Returns: <span id="sipReturns">0</span></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -510,6 +526,27 @@
                 modal.classList.add('translate-x-full');
             }
         });
+
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const body = this.nextElementSibling;
+                const isOpen = !body.classList.contains('hidden');
+
+                // Close all bodies
+                document.querySelectorAll('.accordion-body').forEach(b => b.classList.add('hidden'));
+                document.querySelectorAll('.chev').forEach(chev => chev.classList.remove('rotate-180'));
+
+                if (!isOpen) {
+                    // Open this body
+                    body.classList.remove('hidden');
+                    const chev = this.querySelector('.chev');
+                    if (chev) chev.classList.add('rotate-180');
+                }
+            });
+        });
+
+        // end accordion functionality
     </script>
 </body>
 </html>
