@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="w-full mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-center mb-4">Money Planner</h1>
+        <p class="text-sm text-gray-600 mb-4">Based on the 50/30/20 rule: 50% Needs, 30% Wants, 20% Savings/Debt.</p>
+        <form id="salaryForm" class="mb-4">
+            <label for="salary" class="block text-sm font-medium text-gray-700">Monthly Salary</label>
+            <input type="number" id="salary" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your monthly salary" required>
+            <p class="text-xs text-gray-500 mt-1">Enter your monthly salary</p>
+        </form>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold mb-2">50/30/20 Planner</h2>
+                <div id="results" class="hidden">
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="bg-blue-100 p-3 rounded-md cursor-pointer" onclick="showModal('needs')">
+                            <h3 class="text-sm font-semibold mb-2">50% Needs: <span id="needsAmount">0</span></h3>
+                            <div id="emiDeduction" class="hidden text-xs space-y-1">
+                                <div class="bg-white bg-opacity-60 p-2 rounded">
+                                    <div class="flex justify-between">
+                                        <span>Daily Living:</span>
+                                        <span id="everydayAmount" class="font-medium">0</span>
+                                    </div>
+                                    <div class="flex justify-between text-red-600">
+                                        <span>Loan EMI:</span>
+                                        <span id="emiDeduct" class="font-medium">0</span>
+                                    </div>
+                                    <hr class="my-1 border-gray-300">
+                                    <div class="flex justify-between font-semibold">
+                                        <span>Total Usage:</span>
+                                        <span id="plannedUsage">0</span>
+                                    </div>
+                                </div>
+                                <div class="bg-white bg-opacity-60 p-2 rounded">
+                                    <div class="flex justify-between">
+                                        <span>Reserve Left:</span>
+                                        <span id="adjNeeds" class="font-medium">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-green-100 p-2 rounded-md cursor-pointer" onclick="showModal('wants')">
+                            <h3 class="text-sm font-semibold">30% Wants: <span id="wantsAmount">0</span></h3>
+                        </div>
+                        <div class="bg-yellow-100 p-2 rounded-md cursor-pointer" onclick="showModal('savings')">
+                            <h3 class="text-sm font-semibold">20% Savings/Debt: <span id="savingsAmount">0</span></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold mb-2">Loan Planner</h2>
+                <div id="loanForm">
+                    <label for="loanAmount" class="block text-sm font-medium text-gray-700">Loan Amount</label>
+                    <input type="number" id="loanAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter loan amount">
+                    <label for="tenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (months)</label>
+                    <input type="number" id="tenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in months">
+                    <label for="interestRate" class="block text-sm font-medium text-gray-700 mt-2">Interest Rate (%)</label>
+                    <input type="number" id="interestRate" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter interest rate">
+                    <label for="downpayment" class="block text-sm font-medium text-gray-700 mt-2">Downpayment</label>
+                    <input type="number" id="downpayment" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter downpayment">
+                </div>
+                <div id="loanResults" class="hidden mt-4">
+                    <h3 class="text-sm font-semibold mb-2">Loan Calculation</h3>
+                    <p class="text-sm font-bold text-blue-600">Monthly EMI: <span id="emiAmount">0</span></p>
+                    <p class="text-sm font-bold text-blue-600">Total Payment: <span id="totalPayment">0</span></p>
+                    <p class="text-sm">Principal: <span id="principalAmount">0</span></p>
+                    <p class="text-sm">Interest: <span id="interestAmount">0</span></p>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold mb-2">Investment Planner</h2>
+                <div id="sipForm">
+                    <label for="sipAmount" class="block text-sm font-medium text-gray-700">Monthly SIP Amount</label>
+                    <input type="number" id="sipAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter monthly SIP amount">
+                    <label for="sipTenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (years)</label>
+                    <input type="number" id="sipTenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in years">
+                    <label for="sipReturn" class="block text-sm font-medium text-gray-700 mt-2">Expected Return (% annual)</label>
+                    <input type="number" id="sipReturn" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter expected return">
+                </div>
+                <div id="sipResults" class="hidden mt-4">
+                    <h3 class="text-sm font-semibold mb-2">SIP Projection</h3>
+                    <p class="text-sm">Future Value: <span id="futureValue">0</span></p>
+                    <p class="text-sm">Total Invested: <span id="totalInvested">0</span></p>
+                    <p class="text-sm">Returns: <span id="sipReturns">0</span></p>
+                </div>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">Disclaimer: This is a representation only. Please consult with your bank or financial advisor for actual terms and projections.</p>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed right-0 top-0 h-full w-80 bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
+        <div class="p-5">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle"></h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent" class="text-sm text-gray-700"></div>
+        </div>
+    </div>
+
+    <script>
+        const salaryForm = document.getElementById('salaryForm');
+        const results = document.getElementById('results');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.getElementById('closeModal');
+        const salaryInput = document.getElementById('salary');
+        const loanAmountInput = document.getElementById('loanAmount');
+        const tenureInput = document.getElementById('tenure');
+        const interestRateInput = document.getElementById('interestRate');
+        const downpaymentInput = document.getElementById('downpayment');
+        const loanResults = document.getElementById('loanResults');
+        const sipAmountInput = document.getElementById('sipAmount');
+        const sipTenureInput = document.getElementById('sipTenure');
+        const sipReturnInput = document.getElementById('sipReturn');
+        const sipResults = document.getElementById('sipResults');
+        const emiDeduction = document.getElementById('emiDeduction');
+
+        let currentSalary = 0;
+
+        function updateResults() {
+            if (currentSalary > 0) {
+                const needs = currentSalary * 0.5;
+                const wants = currentSalary * 0.3;
+                const savings = currentSalary * 0.2;
+                document.getElementById('needsAmount').textContent = needs.toFixed(2);
+                document.getElementById('wantsAmount').textContent = wants.toFixed(2);
+                document.getElementById('savingsAmount').textContent = savings.toFixed(2);
+                results.classList.remove('hidden');
+            } else {
+                results.classList.add('hidden');
+            }
+        }
+
+        function updateLoan() {
+            const loanAmount = parseFloat(loanAmountInput.value) || 0;
+            const tenure = parseFloat(tenureInput.value) || 0;
+            const interestRate = parseFloat(interestRateInput.value) || 0;
+            const downpayment = parseFloat(downpaymentInput.value) || 0;
+            const principal = Math.max(0, loanAmount - downpayment);
+            const monthlyRate = interestRate / 100 / 12;
+
+            if (principal > 0 && tenure > 0) {
+                // handle zero-interest loans
+                let emi = 0;
+                if (monthlyRate === 0) {
+                    emi = principal / tenure;
+                } else {
+                    emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / (Math.pow(1 + monthlyRate, tenure) - 1);
+                }
+                const totalPayment = emi * tenure;
+                const interestAmount = totalPayment - principal;
+
+                document.getElementById('emiAmount').textContent = emi.toFixed(2);
+                document.getElementById('totalPayment').textContent = totalPayment.toFixed(2);
+                document.getElementById('principalAmount').textContent = principal.toFixed(2);
+                document.getElementById('interestAmount').textContent = interestAmount.toFixed(2);
+
+                const origNeeds = currentSalary * 0.5;
+                // Split Needs into everyday (50% of Needs) and reserve (the other 50%)
+                const everyday = origNeeds * 0.5;
+                const reserve = origNeeds - everyday; // same as everyday
+
+                // Apply EMI against reserve (everyday is baseline for living). ReserveAfter can be negative.
+                const reserveAfter = reserve - emi;
+
+                const everydayEl = document.getElementById('everydayAmount');
+                const adjNeedsEl = document.getElementById('adjNeeds');
+                const emiDeductEl = document.getElementById('emiDeduct');
+                const plannedEl = document.getElementById('plannedUsage');
+
+                everydayEl.textContent = everyday.toFixed(2);
+                emiDeductEl.textContent = emi.toFixed(2);
+                adjNeedsEl.textContent = reserveAfter.toFixed(2);
+
+                // Planned usage and over/under vs original Needs
+                const plannedUsage = everyday + emi; // what is being used for everyday + EMI
+                plannedEl.textContent = plannedUsage.toFixed(2);
+
+                // highlight negative reserve
+                if (reserveAfter < 0) {
+                    adjNeedsEl.classList.add('text-red-600', 'font-semibold');
+                } else {
+                    adjNeedsEl.classList.remove('text-red-600', 'font-semibold');
+                }
+
+                loanResults.classList.remove('hidden');
+                if (currentSalary > 0) {
+                    emiDeduction.classList.remove('hidden');
+                }
+            } else {
+                loanResults.classList.add('hidden');
+                emiDeduction.classList.add('hidden');
+            }
+        }
+
+        function updateSIP() {
+            const sipAmount = parseFloat(sipAmountInput.value) || 0;
+            const sipTenure = parseFloat(sipTenureInput.value) || 0;
+            const sipReturn = parseFloat(sipReturnInput.value) || 0;
+            const monthlyRate = sipReturn / 100 / 12;
+            const months = sipTenure * 12;
+
+            if (sipAmount > 0 && months > 0 && monthlyRate > 0) {
+                const futureValue = sipAmount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+                const totalInvested = sipAmount * months;
+                const returns = futureValue - totalInvested;
+
+                document.getElementById('futureValue').textContent = futureValue.toFixed(2);
+                document.getElementById('totalInvested').textContent = totalInvested.toFixed(2);
+                document.getElementById('sipReturns').textContent = returns.toFixed(2);
+
+                sipResults.classList.remove('hidden');
+            } else {
+                sipResults.classList.add('hidden');
+            }
+        }
+
+        salaryInput.addEventListener('input', function() {
+            currentSalary = parseFloat(this.value) || 0;
+            updateResults();
+            updateLoan();
+            updateSIP();
+        });
+
+        [loanAmountInput, tenureInput, interestRateInput, downpaymentInput].forEach(input => {
+            input.addEventListener('input', updateLoan);
+        });
+
+        [sipAmountInput, sipTenureInput, sipReturnInput].forEach(input => {
+            input.addEventListener('input', updateSIP);
+        });
+
+        function showModal(type) {
+            if (type === 'needs') {
+                modalTitle.textContent = '50% Needs';
+                modalContent.innerHTML = `
+                    <p>These are essential expenses that are necessary for basic living and survival.</p>
+                    <h4 class="font-semibold mt-2">Housing</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Rent or mortgage payments</li>
+                        <li>Property taxes</li>
+                        <li>Homeowners or renters insurance</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Utilities</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Electricity</li>
+                        <li>Water and sewage</li>
+                        <li>Gas or heating</li>
+                        <li>Internet and phone bills</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Groceries</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Food and beverages</li>
+                        <li>Household supplies (cleaning products, toiletries)</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Transportation</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Fuel for vehicles</li>
+                        <li>Public transportation costs (bus, train fares)</li>
+                        <li>Car payments (if applicable)</li>
+                        <li>Auto insurance</li>
+                        <li>Maintenance and repairs (oil changes, tire replacements)</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Health</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Health insurance premiums</li>
+                        <li>Out-of-pocket medical expenses (doctor visits, prescriptions)</li>
+                        <li>Dental and vision care</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Minimum Debt Payments</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Credit card minimum payments</li>
+                        <li>Student loan payments</li>
+                        <li>Personal loan payments</li>
+                    </ul>
+                `;
+            } else if (type === 'wants') {
+                modalTitle.textContent = '30% Wants';
+                modalContent.innerHTML = `
+                    <p>These are non-essential expenses that enhance your lifestyle and provide enjoyment.</p>
+                    <h4 class="font-semibold mt-2">Dining and Entertainment</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Eating out at restaurants</li>
+                        <li>Takeout or delivery food</li>
+                        <li>Movies, concerts, and theater tickets</li>
+                        <li>Streaming services (Netflix, Spotify, etc.)</li>
+                        <li>Subscriptions (magazines, online courses)</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Hobbies and Leisure Activities</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Sports and fitness memberships (gym, yoga classes)</li>
+                        <li>Hobbies (crafting, photography, gaming)</li>
+                        <li>Travel and vacations</li>
+                        <li>Outdoor activities (hiking, camping gear)</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Personal Care</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Haircuts and beauty treatments (salons, spas)</li>
+                        <li>Clothing and accessories (non-essential fashion items)</li>
+                        <li>Gadgets and electronics (new phones, tablets)</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Miscellaneous</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Gifts and celebrations (birthdays, holidays)</li>
+                        <li>Home decor and furnishings (non-essential items)</li>
+                        <li>Social events (parties, outings with friends)</li>
+                    </ul>
+                `;
+            } else if (type === 'savings') {
+                modalTitle.textContent = '20% Savings/Debt';
+                modalContent.innerHTML = `
+                    <p>This category focuses on building financial security and preparing for the future.</p>
+                    <h4 class="font-semibold mt-2">Emergency Fund</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Savings for unexpected expenses (medical emergencies, car repairs)</li>
+                        <li>Typically, aim for 3-6 months' worth of living expenses</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Retirement Savings</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Contributions to retirement accounts (401(k), IRA)</li>
+                        <li>Pension plans</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Investments</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Stock market investments (individual stocks, mutual funds)</li>
+                        <li>Bonds and fixed-income securities</li>
+                        <li>Real estate investments</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Debt Repayment</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Extra payments on credit card debt</li>
+                        <li>Additional payments on student loans or personal loans</li>
+                        <li>Paying off high-interest debt faster</li>
+                    </ul>
+                    <h4 class="font-semibold mt-2">Other Savings Goals</h4>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Saving for a down payment on a house</li>
+                        <li>Saving for a major purchase (car, vacation)</li>
+                        <li>Saving for education (children’s college fund)</li>
+                    </ul>
+                `;
+            }
+            modal.classList.remove('translate-x-full');
+        }
+
+        closeModal.addEventListener('click', function() {
+            modal.classList.add('translate-x-full');
+        });
+
+        window.addEventListener('click', function(e) {
+            if (!modal.contains(e.target) && !e.target.closest('.cursor-pointer')) {
+                modal.classList.add('translate-x-full');
+            }
+        });
+    </script>
+</body>
+</html>
