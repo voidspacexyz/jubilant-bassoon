@@ -12,7 +12,7 @@
         <p class="text-sm text-gray-600 mb-4">Based on the 50/30/20 rule: 50% Needs, 30% Wants, 20% Savings/Debt.</p>
         <form id="salaryForm" class="mb-4">
             <label for="salary" class="block text-sm font-medium text-gray-700">Monthly Salary</label>
-            <input type="number" id="salary" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your monthly salary" required>
+            <input type="text" id="salary" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your monthly salary" required>
             <p class="text-xs text-gray-500 mt-1">Enter your monthly salary</p>
         </form>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -59,13 +59,13 @@
                 <h2 class="text-lg font-semibold mb-2">Loan Planner</h2>
                 <div id="loanForm">
                     <label for="loanAmount" class="block text-sm font-medium text-gray-700">Loan Amount</label>
-                    <input type="number" id="loanAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter loan amount">
+                    <input type="text" id="loanAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter loan amount">
                     <label for="tenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (months)</label>
-                    <input type="number" id="tenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in months">
+                    <input type="number" id="tenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in months" min="0" step="1">
                     <label for="interestRate" class="block text-sm font-medium text-gray-700 mt-2">Interest Rate (%)</label>
-                    <input type="number" id="interestRate" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter interest rate">
+                    <input type="number" id="interestRate" step="0.01" min="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter interest rate">
                     <label for="downpayment" class="block text-sm font-medium text-gray-700 mt-2">Downpayment</label>
-                    <input type="number" id="downpayment" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter downpayment">
+                    <input type="text" id="downpayment" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter downpayment">
                 </div>
                 <div id="loanResults" class="hidden mt-4">
                     <h3 class="text-sm font-semibold mb-2">Loan Calculation</h3>
@@ -79,11 +79,11 @@
                 <h2 class="text-lg font-semibold mb-2">Investment Planner</h2>
                 <div id="sipForm">
                     <label for="sipAmount" class="block text-sm font-medium text-gray-700">Monthly SIP Amount</label>
-                    <input type="number" id="sipAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter monthly SIP amount">
+                    <input type="text" id="sipAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter monthly SIP amount">
                     <label for="sipTenure" class="block text-sm font-medium text-gray-700 mt-2">Tenure (years)</label>
-                    <input type="number" id="sipTenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in years">
+                    <input type="number" id="sipTenure" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter tenure in years" min="0" step="1">
                     <label for="sipReturn" class="block text-sm font-medium text-gray-700 mt-2">Expected Return (% annual)</label>
-                    <input type="number" id="sipReturn" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter expected return">
+                    <input type="number" id="sipReturn" step="0.01" min="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter expected return">
                 </div>
                 <div id="sipResults" class="hidden mt-4">
                     <h3 class="text-sm font-semibold mb-2">SIP Projection</h3>
@@ -132,14 +132,124 @@
 
         let currentSalary = 0;
 
+        // Helpers: parse value removing commas and non-numeric characters and ensure non-negative
+        function parseNumber(val) {
+            if (val === null || val === undefined) return 0;
+            const cleaned = String(val).replace(/,/g, '').replace(/[^0-9.\-]/g, '');
+            const n = Number(cleaned);
+            if (Number.isNaN(n)) return 0;
+            return Math.max(0, n);
+        }
+
+        // Format number in Indian locale with 2 decimal places
+        function formatIN(num) {
+            return Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Format input elements (money) on blur and remove formatting on focus
+        const moneyInputs = [salaryInput, loanAmountInput, downpaymentInput, sipAmountInput];
+
+        // helper to format numeric string with Indian grouping (no rounding)
+        function formatIndianNumericString(numericStr) {
+            if (!numericStr) return '';
+            const parts = numericStr.split('.');
+            let intPart = parts[0];
+            // remove leading zeros but keep single 0
+            intPart = intPart.replace(/^0+(?=\d)/, '');
+            if (intPart === '') intPart = '0';
+            const decPart = parts[1] || '';
+
+            if (intPart.length > 3) {
+                const last3 = intPart.slice(-3);
+                let rest = intPart.slice(0, -3);
+                rest = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+                intPart = rest + ',' + last3;
+            }
+            return decPart ? intPart + '.' + decPart : intPart;
+        }
+
+        moneyInputs.forEach(el => {
+            if (!el) return;
+            el.addEventListener('focus', function() {
+                // remove commas so typing/editing is straightforward
+                this.value = String(this.value).replace(/,/g, '');
+            });
+
+            el.addEventListener('blur', function() {
+                const v = parseNumber(this.value);
+                // show 0.00 for empty/zero
+                this.value = formatIN(v);
+                // trigger updates after formatting
+                updateResults();
+                updateLoan();
+                updateSIP();
+            });
+
+            el.addEventListener('input', function(e) {
+                // preserve caret while formatting with Indian commas
+                const raw = this.value;
+                const selStart = this.selectionStart || 0;
+
+                // count digits (0-9) before caret in the raw value
+                const digitsBefore = raw.slice(0, selStart).replace(/[^0-9]/g, '').length;
+
+                // remove commas and non-numeric (except dot)
+                let cleaned = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+                // allow only one dot
+                const firstDot = cleaned.indexOf('.');
+                if (firstDot !== -1) {
+                    cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
+                }
+
+                // format using Indian grouping without changing decimal precision here
+                const formatted = cleaned === '' ? '' : formatIndianNumericString(cleaned);
+                this.value = formatted;
+
+                // determine new caret position based on digitsBefore
+                let newPos = 0;
+                if (digitsBefore === 0) {
+                    newPos = 0;
+                } else {
+                    let counted = 0;
+                    for (let i = 0; i < formatted.length; i++) {
+                        if (/[0-9]/.test(formatted[i])) counted++;
+                        if (counted >= digitsBefore) {
+                            newPos = i + 1;
+                            break;
+                        }
+                    }
+                    // if not reached (e.g., user deleted), place at end
+                    if (counted < digitsBefore) newPos = formatted.length;
+                }
+
+                try {
+                    this.setSelectionRange(newPos, newPos);
+                } catch (err) {
+                    // ignore if not focusable
+                }
+
+                // keep other parts updated live
+                if (this === salaryInput) {
+                    currentSalary = parseNumber(this.value);
+                    updateResults();
+                    updateLoan();
+                    updateSIP();
+                } else if (this === loanAmountInput || this === downpaymentInput) {
+                    updateLoan();
+                } else if (this === sipAmountInput) {
+                    updateSIP();
+                }
+            });
+        });
+
         function updateResults() {
             if (currentSalary > 0) {
                 const needs = currentSalary * 0.5;
                 const wants = currentSalary * 0.3;
                 const savings = currentSalary * 0.2;
-                document.getElementById('needsAmount').textContent = needs.toFixed(2);
-                document.getElementById('wantsAmount').textContent = wants.toFixed(2);
-                document.getElementById('savingsAmount').textContent = savings.toFixed(2);
+                document.getElementById('needsAmount').textContent = formatIN(needs);
+                document.getElementById('wantsAmount').textContent = formatIN(wants);
+                document.getElementById('savingsAmount').textContent = formatIN(savings);
                 results.classList.remove('hidden');
             } else {
                 results.classList.add('hidden');
@@ -147,15 +257,14 @@
         }
 
         function updateLoan() {
-            const loanAmount = parseFloat(loanAmountInput.value) || 0;
+            const loanAmount = parseNumber(loanAmountInput ? loanAmountInput.value : 0);
             const tenure = parseFloat(tenureInput.value) || 0;
             const interestRate = parseFloat(interestRateInput.value) || 0;
-            const downpayment = parseFloat(downpaymentInput.value) || 0;
+            const downpayment = parseNumber(downpaymentInput ? downpaymentInput.value : 0);
             const principal = Math.max(0, loanAmount - downpayment);
             const monthlyRate = interestRate / 100 / 12;
 
             if (principal > 0 && tenure > 0) {
-                // handle zero-interest loans
                 let emi = 0;
                 if (monthlyRate === 0) {
                     emi = principal / tenure;
@@ -165,17 +274,14 @@
                 const totalPayment = emi * tenure;
                 const interestAmount = totalPayment - principal;
 
-                document.getElementById('emiAmount').textContent = emi.toFixed(2);
-                document.getElementById('totalPayment').textContent = totalPayment.toFixed(2);
-                document.getElementById('principalAmount').textContent = principal.toFixed(2);
-                document.getElementById('interestAmount').textContent = interestAmount.toFixed(2);
+                document.getElementById('emiAmount').textContent = formatIN(emi);
+                document.getElementById('totalPayment').textContent = formatIN(totalPayment);
+                document.getElementById('principalAmount').textContent = formatIN(principal);
+                document.getElementById('interestAmount').textContent = formatIN(interestAmount);
 
                 const origNeeds = currentSalary * 0.5;
-                // Split Needs into everyday (50% of Needs) and reserve (the other 50%)
                 const everyday = origNeeds * 0.5;
-                const reserve = origNeeds - everyday; // same as everyday
-
-                // Apply EMI against reserve (everyday is baseline for living). ReserveAfter can be negative.
+                const reserve = origNeeds - everyday;
                 const reserveAfter = reserve - emi;
 
                 const everydayEl = document.getElementById('everydayAmount');
@@ -183,15 +289,13 @@
                 const emiDeductEl = document.getElementById('emiDeduct');
                 const plannedEl = document.getElementById('plannedUsage');
 
-                everydayEl.textContent = everyday.toFixed(2);
-                emiDeductEl.textContent = emi.toFixed(2);
-                adjNeedsEl.textContent = reserveAfter.toFixed(2);
+                everydayEl.textContent = formatIN(everyday);
+                emiDeductEl.textContent = formatIN(emi);
+                adjNeedsEl.textContent = formatIN(reserveAfter);
 
-                // Planned usage and over/under vs original Needs
-                const plannedUsage = everyday + emi; // what is being used for everyday + EMI
-                plannedEl.textContent = plannedUsage.toFixed(2);
+                const plannedUsage = everyday + emi;
+                plannedEl.textContent = formatIN(plannedUsage);
 
-                // highlight negative reserve
                 if (reserveAfter < 0) {
                     adjNeedsEl.classList.add('text-red-600', 'font-semibold');
                 } else {
@@ -209,20 +313,25 @@
         }
 
         function updateSIP() {
-            const sipAmount = parseFloat(sipAmountInput.value) || 0;
+            const sipAmount = parseNumber(sipAmountInput ? sipAmountInput.value : 0);
             const sipTenure = parseFloat(sipTenureInput.value) || 0;
             const sipReturn = parseFloat(sipReturnInput.value) || 0;
             const monthlyRate = sipReturn / 100 / 12;
             const months = sipTenure * 12;
 
-            if (sipAmount > 0 && months > 0 && monthlyRate > 0) {
-                const futureValue = sipAmount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+            if (sipAmount > 0 && months > 0) {
+                let futureValue = 0;
+                if (monthlyRate === 0) {
+                    futureValue = sipAmount * months;
+                } else {
+                    futureValue = sipAmount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+                }
                 const totalInvested = sipAmount * months;
                 const returns = futureValue - totalInvested;
 
-                document.getElementById('futureValue').textContent = futureValue.toFixed(2);
-                document.getElementById('totalInvested').textContent = totalInvested.toFixed(2);
-                document.getElementById('sipReturns').textContent = returns.toFixed(2);
+                document.getElementById('futureValue').textContent = formatIN(futureValue);
+                document.getElementById('totalInvested').textContent = formatIN(totalInvested);
+                document.getElementById('sipReturns').textContent = formatIN(returns);
 
                 sipResults.classList.remove('hidden');
             } else {
@@ -230,20 +339,36 @@
             }
         }
 
+        // wire up events
         salaryInput.addEventListener('input', function() {
-            currentSalary = parseFloat(this.value) || 0;
+            currentSalary = parseNumber(this.value);
             updateResults();
             updateLoan();
             updateSIP();
         });
 
         [loanAmountInput, tenureInput, interestRateInput, downpaymentInput].forEach(input => {
-            input.addEventListener('input', updateLoan);
+            if (!input) return;
+            // ensure non-negative for number inputs
+            input.addEventListener('input', function() {
+                if (this.type === 'number') {
+                    if (this.value === '' ) return;
+                    const n = parseFloat(this.value);
+                    if (!Number.isNaN(n) && n < 0) this.value = String(Math.abs(n));
+                } else {
+                    // for text money input, parsing is handled separately
+                }
+                updateLoan();
+            });
         });
 
         [sipAmountInput, sipTenureInput, sipReturnInput].forEach(input => {
+            if (!input) return;
             input.addEventListener('input', updateSIP);
         });
+
+        // initialize money inputs to 0.00 if empty
+        moneyInputs.forEach(el => { if (el && !el.value) el.value = formatIN(0); });
 
         function showModal(type) {
             if (type === 'needs') {
