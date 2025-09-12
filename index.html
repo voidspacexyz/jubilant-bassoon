@@ -69,12 +69,24 @@
                     <div class="border rounded overflow-hidden bg-white">
                         <button type="button" class="w-full flex justify-between items-center p-4 accordion-header bg-blue-100 hover:bg-blue-200 text-blue-800">
                             <div class="text-left">
-                                <div class="text-lg font-semibold">50 Planner (Needs)</div>
-                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated50">0</span> &nbsp;|&nbsp; Actual: <span id="actual50">0</span></div>
+                                <div class="text-lg font-semibold">Needs planner (50%)</div>
+                                <div class="text-sm mt-1 text-gray-700">Allocated: <span id="allocated50">0</span> &nbsp;|&nbsp; Actual: <span id="actual50">0</span> &nbsp;|&nbsp; Difference: <span id="difference50" class="font-medium">0</span></div>
                             </div>
                              <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div class="accordion-body hidden p-4">
+                            <!-- Dynamic Needs item list rendered by JS -->
+                            <div id="needsItems" class="space-y-3" aria-live="polite"></div>
+
+                            <div class="flex items-center justify-end mt-3">
+                                <div class="flex gap-2">
+                                    <button id="resetNeeds" class="px-3 py-1 bg-gray-100 rounded text-sm">Reset to defaults</button>
+                                    <button id="addNeedItem" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Add item</button>
+                                </div>
+                            </div>
+
+                            <!-- Remaining unallocated moved to header difference; removed in-body status -->
+
                             <div id="loanForm">
                                 <label for="loanAmount" class="block text-sm font-medium text-gray-700">Loan Amount</label>
                                 <input type="text" id="loanAmount" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter loan amount">
@@ -84,6 +96,10 @@
                                 <input type="number" id="interestRate" step="0.01" min="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter interest rate">
                                 <label for="downpayment" class="block text-sm font-medium text-gray-700 mt-2">Downpayment</label>
                                 <input type="text" id="downpayment" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter downpayment">
+                                <div class="flex items-center gap-2 mt-3">
+                                    <input id="includeEmiInNeeds" type="checkbox" class="h-4 w-4" />
+                                    <label for="includeEmiInNeeds" class="text-sm text-gray-700">Include EMI inside 50% Needs</label>
+                                </div>
                             </div>
                             <div id="loanResults" class="hidden mt-4">
                                 <h3 class="text-sm font-semibold mb-2">Loan Calculation</h3>

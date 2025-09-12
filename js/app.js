@@ -221,3 +221,302 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial render
     updateResults();
 });
+
+// Needs items feature
+(function(){
+    // Utilities
+    const qs = (s, el=document) => el.querySelector(s);
+    const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
+    const fmt = (v) => new Intl.NumberFormat().format(Number(v) || 0);
+    const debounce = (fn, wait=300) => {
+        let t;
+        return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
+    };
+
+    // Elements
+    const salaryInput = qs('#salary');
+    const needsItemsContainer = qs('#needsItems');
+    const addNeedBtn = qs('#addNeedItem');
+    const resetNeedsBtn = qs('#resetNeeds');
+
+    const loanAmount = qs('#loanAmount');
+    const tenure = qs('#tenure');
+    const interestRate = qs('#interestRate');
+    const downpayment = qs('#downpayment');
+    const includeEmiInNeeds = qs('#includeEmiInNeeds');
+
+    const emiAmountDisplay = qs('#emiAmount');
+    const loanResults = qs('#loanResults');
+
+    const NEEDS_KEY = 'costplanner.needs.v1';
+
+    // Default items as per blueprint (amounts will be computed from salary)
+    const defaultItems = [
+        { id: 'living', label: 'Living Expenses', required: true, percentOfNeeds: 50 },
+        { id: 'groceries', label: 'Groceries & Food', percentOfNeeds: 20 },
+        { id: 'utilities', label: 'Utilities', percentOfNeeds: 10 },
+        { id: 'transport', label: 'Transportation', percentOfNeeds: 8 },
+        { id: 'health', label: 'Health', percentOfNeeds: 6 },
+        { id: 'debtmin', label: 'Minimum Debt Payments', percentOfNeeds: 4 },
+        { id: 'misc', label: 'Misc Essentials / Contingency', percentOfNeeds: 2 }
+    ];
+
+    // State
+    let salary = 0;
+    let needsBucket = 0; // 50% of salary
+    let items = [];
+    let emi = 0;
+
+    // Load or init
+    function loadState(){
+        const raw = localStorage.getItem(NEEDS_KEY);
+        if(raw){
+            try{ items = JSON.parse(raw); } catch(e){ items = null; }
+        }
+        if(!items){
+            items = defaultItems.map(i=>({ ...i, value: 0, mode: 'amount' }));
+        } else {
+            // sanitize numeric fields to avoid strings causing logic errors
+            items = items.map(it=>({
+                ...it,
+                value: Number(it.value) || 0,
+                mode: it.mode || 'amount',
+                percentOfNeeds: isFinite(Number(it.percentOfNeeds)) ? Number(it.percentOfNeeds) : (it.percentOfNeeds || 0)
+            }));
+        }
+    }
+
+    function saveState(){
+        localStorage.setItem(NEEDS_KEY, JSON.stringify(items));
+    }
+
+    function updateSalaryFromInput(){
+        const v = Number((salaryInput.value||'').replace(/,/g,''));
+        salary = isFinite(v) ? v : 0;
+        needsBucket = salary * 0.5;
+    }
+
+    function computeDefaultsFromSalary(){
+        items.forEach(it=>{
+            if(it.mode === 'amount' && (Number(it.value) === 0 || it.fromDefault)){
+                // compute default value from percentOfNeeds
+                if(it.percentOfNeeds){
+                    it.value = Math.round((it.percentOfNeeds/100) * needsBucket);
+                    it.fromDefault = true;
+                }
+            }
+        });
+    }
+
+    function renderItems(){
+        needsItemsContainer.innerHTML = '';
+        items.forEach((it, idx)=>{
+            const wrapper = document.createElement('div');
+            wrapper.className = 'bg-gray-50 p-3 rounded flex flex-col gap-2';
+            wrapper.setAttribute('data-id', it.id || idx);
+
+            const label = document.createElement('label');
+            label.className = 'text-sm font-medium text-gray-800';
+            const percentOfNeeds = needsBucket ? Math.round((it.value / needsBucket) * 100) : 0;
+            label.textContent = `${it.label} (${percentOfNeeds}%)`;
+            label.htmlFor = `input-${idx}`;
+
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = `input-${idx}`;
+            input.value = fmt(it.value);
+            input.className = 'flex-1 px-2 py-1 border border-gray-300 rounded';
+            input.setAttribute('aria-label', it.label);
+
+            // mode toggle
+            const modeToggle = document.createElement('button');
+            modeToggle.type = 'button';
+            modeToggle.className = 'px-2 py-1 bg-white border rounded text-xs';
+            modeToggle.textContent = it.mode === 'amount' ? 'Amount' : '% of Needs';
+            modeToggle.title = 'Toggle input mode';
+
+            // remove button (unless required)
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'px-2 py-1 bg-red-50 text-red-700 rounded text-xs';
+            removeBtn.textContent = 'Remove';
+            removeBtn.disabled = !!it.required;
+
+            row.appendChild(input);
+            row.appendChild(modeToggle);
+            row.appendChild(removeBtn);
+
+            const help = document.createElement('div');
+            help.className = 'text-xs text-gray-500 flex justify-between items-center';
+            help.innerHTML = `<span>${it.required ? 'Required' : 'Editable'}</span><span class="font-medium">% of total: ${needsBucket ? Math.round((it.value/salary||0)*100) : 0}%</span>`;
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(row);
+            wrapper.appendChild(help);
+
+            needsItemsContainer.appendChild(wrapper);
+
+            // Events
+            input.addEventListener('input', e=>{
+                const raw = e.target.value.replace(/,/g,'').trim();
+                const num = Number(raw);
+                if(isFinite(num)){
+                    it.value = num;
+                    it.mode = 'amount';
+                    it.fromDefault = false;
+                    saveState();
+                    // Do not re-render entire list on every keystroke to preserve focus/caret
+                    updateStatus();
+                }
+            });
+
+            modeToggle.addEventListener('click', ()=>{
+                if(it.mode === 'amount'){
+                    // switch to percent mode
+                    it.mode = 'percent';
+                    it.percentOfNeeds = needsBucket ? Math.round((it.value/needsBucket)*100) : (it.percentOfNeeds||0);
+                    modeToggle.textContent = '% of Needs';
+                } else {
+                    it.mode = 'amount';
+                    it.value = Math.round((it.percentOfNeeds/100) * needsBucket);
+                    modeToggle.textContent = 'Amount';
+                }
+                saveState();
+                renderItems();
+                updateStatus();
+            });
+
+            removeBtn.addEventListener('click', ()=>{
+                if(it.required) return;
+                items = items.filter(x=>x!==it);
+                saveState();
+                renderItems();
+                updateStatus();
+            });
+        });
+    }
+
+    function updateStatus(){
+        // Sum amounts; if item is in percent mode, compute amount from percentOfNeeds
+        const total = items.reduce((s,it)=>{
+            if(it.mode === 'percent'){
+                const amt = needsBucket ? Math.round((Number(it.percentOfNeeds||0)/100) * needsBucket) : 0;
+                return s + amt;
+            }
+            return s + (Number(it.value)||0);
+        }, 0);
+        const includedEmi = (includeEmiInNeeds.checked && emi > 0) ? emi : 0;
+        const remaining = Math.round(needsBucket - total - includedEmi);
+        // Difference is remaining (positive means unallocated available, negative means over-allocated)
+        const diffEl = qs('#difference50');
+        if(diffEl){
+            diffEl.textContent = fmt(remaining);
+            if(remaining < 0){
+                diffEl.classList.remove('text-green-600');
+                diffEl.classList.add('text-red-700','font-bold');
+            } else {
+                diffEl.classList.remove('text-red-700','font-bold');
+                diffEl.classList.add('text-green-600');
+            }
+        }
+
+        // update displays
+        qsa('#allocated50').forEach(el=>el.textContent = fmt(needsBucket));
+        // Actual for 50 planner = sum of item values + EMI if included
+        const actual50Value = total + includedEmi;
+        qsa('#actual50').forEach(el=>el.textContent = fmt(actual50Value));
+        qsa('#needsAmount').forEach(el=>el.textContent = fmt(total + includedEmi));
+        qsa('#everydayAmount').forEach(el=>el.textContent = fmt(items.find(i=>i.id==='living')?.value || 0));
+        qsa('#adjNeeds').forEach(el=>el.textContent = fmt(remaining));
+        saveState();
+    }
+
+    // EMI calculations
+    function calcEmi(){
+        const rawLoan = Number((loanAmount.value||'').replace(/,/g,''));
+        const rawDown = Number((downpayment.value||'').replace(/,/g,''));
+        const n = Number(tenure.value) || 0;
+        const rawInterest = Number(interestRate.value) || 0;
+
+        // Validate presence of essential inputs before computing EMI
+        if(!(rawLoan > 0 && n > 0) ){
+            emi = 0; loanResults.classList.add('hidden'); emiAmountDisplay.textContent = fmt(0); updateStatus(); return;
+        }
+
+        // Ensure downpayment is sane
+        const down = isFinite(rawDown) ? rawDown : 0;
+        if(down < 0 || down >= rawLoan){
+            // not ready to compute EMI until valid downpayment provided (or zero)
+            emi = 0; loanResults.classList.add('hidden'); emiAmountDisplay.textContent = fmt(0); updateStatus(); return;
+        }
+
+        const P = rawLoan - down;
+        const r = rawInterest/1200; // monthly rate
+        let monthly = 0;
+        if(r === 0){
+            monthly = P / n;
+        } else {
+            monthly = P * r * Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+        }
+        emi = Math.round(monthly);
+        loanResults.classList.remove('hidden');
+        emiAmountDisplay.textContent = fmt(emi);
+
+        // totals
+        const totalPayment = Math.round(monthly * n);
+        qs('#totalPayment').textContent = fmt(totalPayment);
+        qs('#principalAmount').textContent = fmt(P);
+        qs('#interestAmount').textContent = fmt(totalPayment - P);
+
+        updateStatus();
+    }
+
+    // Add custom item flow
+    function addCustomItem(){
+        const name = prompt('Enter item name');
+        if(!name) return;
+        const suggestion = 5; // percent suggestion
+        const it = { id: `custom_${Date.now()}`, label: name, percentOfNeeds: suggestion, mode: 'amount', value: Math.round((suggestion/100)*needsBucket) };
+        items.push(it);
+        saveState();
+        renderItems();
+        updateStatus();
+    }
+
+    function resetToDefaults(){
+        items = defaultItems.map(i=>({ ...i, value: 0, mode: 'amount', fromDefault: true }));
+        saveState();
+        computeDefaultsFromSalary();
+        renderItems();
+        updateStatus();
+    }
+
+    // Wire events
+    salaryInput.addEventListener('input', ()=>{
+        updateSalaryFromInput();
+        computeDefaultsFromSalary();
+        renderItems();
+        updateStatus();
+    });
+
+    const debouncedCalc = debounce(calcEmi, 350);
+    [loanAmount, tenure, interestRate, downpayment].forEach(el=> el.addEventListener('input', debouncedCalc));
+    [loanAmount, tenure, interestRate, downpayment].forEach(el=> el.addEventListener('blur', calcEmi));
+    includeEmiInNeeds.addEventListener('change', ()=> updateStatus());
+
+    addNeedBtn.addEventListener('click', addCustomItem);
+    resetNeedsBtn.addEventListener('click', resetToDefaults);
+
+    // Init
+    loadState();
+    updateSalaryFromInput();
+    computeDefaultsFromSalary();
+    renderItems();
+    // Ensure EMI is computed once on load so Difference/Actual are correct
+    calcEmi();
+    updateStatus();
+
+})();
