@@ -595,16 +595,15 @@
         document.querySelectorAll('.accordion-header').forEach(header => {
             header.addEventListener('click', function() {
                 const body = this.nextElementSibling;
+                const chev = this.querySelector('.chev');
                 const isOpen = !body.classList.contains('hidden');
 
-                // Close all bodies
-                document.querySelectorAll('.accordion-body').forEach(b => b.classList.add('hidden'));
-                document.querySelectorAll('.chev').forEach(chev => chev.classList.remove('rotate-180'));
-
-                if (!isOpen) {
-                    // Open this body
+                // Toggle only this accordion (allow multiple open)
+                if (isOpen) {
+                    body.classList.add('hidden');
+                    if (chev) chev.classList.remove('rotate-180');
+                } else {
                     body.classList.remove('hidden');
-                    const chev = this.querySelector('.chev');
                     if (chev) chev.classList.add('rotate-180');
                 }
             });
