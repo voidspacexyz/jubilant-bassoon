@@ -609,6 +609,14 @@
                 }
             });
         });
+
+        // trigger calculations on initial load if salary provided
+        if (salaryInput && salaryInput.value && parseNumber(salaryInput.value) > 0) {
+            currentSalary = parseNumber(salaryInput.value);
+            updateResults();
+            updateLoan();
+            updateSIP();
+        }
     </script>
 </body>
 </html>
