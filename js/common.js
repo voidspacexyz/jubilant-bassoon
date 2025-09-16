@@ -9,29 +9,8 @@
         actual: { 50: 0, 30: 0, 20: 0 }
     };
 
-    // DOM elements
-    let salaryInput = document.getElementById('salary');
-    let resultsBox = document.getElementById('results');
-    let needsAmount = document.getElementById('needsAmount');
-    let wantsAmount = document.getElementById('wantsAmount');
-    let savingsAmount = document.getElementById('savingsAmount');
-    let allocated50 = document.getElementById('allocated50');
-    let allocated30 = document.getElementById('allocated30');
-    let allocated20 = document.getElementById('allocated20');
-    let actual50 = document.getElementById('actual50');
-    let actual30 = document.getElementById('actual30');
-    let actual20 = document.getElementById('actual20');
-    let allocated50Header = document.getElementById('allocated50-header');
-    let allocated30Header = document.getElementById('allocated30-header');
-    let allocated20Header = document.getElementById('allocated20-header');
-    let actual50Header = document.getElementById('actual50-header');
-    let actual30Header = document.getElementById('actual30-header');
-    let actual20Header = document.getElementById('actual20-header');
-    let modal = document.getElementById('modal');
-    let modalTitle = document.getElementById('modalTitle');
-    let modalContent = document.getElementById('modalContent');
-    let closeModal = document.getElementById('closeModal');
-    let accordions = document.querySelectorAll('.accordion-header');
+    // DOM elements - lazy references (may be null if elements not yet present)
+    let salaryInput, resultsBox, allocated50, wantsAmount, savingsAmount, actual50, allocated50Header, allocated30Header, allocated20Header, actual50Header, actual30Header, actual20Header, modal, modalTitle, modalContent, closeModal, accordions;
 
     // Expose state and elements globally for other modules
     window.AppCommon = {
@@ -39,15 +18,10 @@
         elements: {
             salaryInput,
             resultsBox,
-            needsAmount,
+            allocated50,
             wantsAmount,
             savingsAmount,
-            allocated50,
-            allocated30,
-            allocated20,
             actual50,
-            actual30,
-            actual20,
             allocated50Header,
             allocated30Header,
             allocated20Header,
@@ -66,15 +40,10 @@
             return {
                 salaryInput: get('salary'),
                 resultsBox: get('results'),
-                needsAmount: get('needsAmount'),
+                allocated50: get('allocated50'),
                 wantsAmount: get('wantsAmount'),
                 savingsAmount: get('savingsAmount'),
-                allocated50: get('allocated50'),
-                allocated30: get('allocated30'),
-                allocated20: get('allocated20'),
                 actual50: get('actual50'),
-                actual30: get('actual30'),
-                actual20: get('actual20'),
                 allocated50Header: get('allocated50-header'),
                 allocated30Header: get('allocated30-header'),
                 allocated20Header: get('allocated20-header'),
@@ -99,67 +68,124 @@
         const elems = window.AppCommon ? window.AppCommon.getElements() : {
             salaryInput: document.getElementById('salary'),
             resultsBox: document.getElementById('results'),
-            needsAmount: document.getElementById('needsAmount'),
+            allocated50: document.getElementById('allocated50'),
             wantsAmount: document.getElementById('wantsAmount'),
             savingsAmount: document.getElementById('savingsAmount'),
-            allocated50: document.getElementById('allocated50'),
-            allocated30: document.getElementById('allocated30'),
-            allocated20: document.getElementById('allocated20'),
             allocated50Header: document.getElementById('allocated50-header'),
             allocated30Header: document.getElementById('allocated30-header'),
             allocated20Header: document.getElementById('allocated20-header'),
             actual50: document.getElementById('actual50'),
-            actual30: document.getElementById('actual30'),
-            actual20: document.getElementById('actual20'),
             actual50Header: document.getElementById('actual50-header'),
             actual30Header: document.getElementById('actual30-header'),
             actual20Header: document.getElementById('actual20-header')
         };
+
         const salaryEl = elems.salaryInput || salaryInput;
         const resultsBoxEl = elems.resultsBox || resultsBox;
-        const needsEl = elems.needsAmount || document.getElementById('allocated50') || allocated50;
-        const wantsEl = elems.wantsAmount || document.getElementById('wantsAmount') || wantsAmount;
-        const savingsEl = elems.savingsAmount || document.getElementById('savingsAmount') || savingsAmount;
         const alloc50El = elems.allocated50 || allocated50;
-        const alloc30El = elems.allocated30 || allocated30;
-        const alloc20El = elems.allocated20 || allocated20;
+        const wantsEl = elems.wantsAmount || wantsAmount;
+        const savingsEl = elems.savingsAmount || savingsAmount;
         const alloc50HeaderEl = elems.allocated50Header || allocated50Header;
         const alloc30HeaderEl = elems.allocated30Header || allocated30Header;
         const alloc20HeaderEl = elems.allocated20Header || allocated20Header;
         const actual50El = elems.actual50 || actual50;
-        const actual30El = elems.actual30 || actual30;
-        const actual20El = elems.actual20 || actual20;
         const actual50HeaderEl = elems.actual50Header || actual50Header;
         const actual30HeaderEl = elems.actual30Header || actual30Header;
         const actual20HeaderEl = elems.actual20Header || actual20Header;
 
-        const salary = parseCurrency(salaryEl.value);
+        const salary = parseCurrency((salaryEl && salaryEl.value) || (salaryEl && salaryEl.textContent) || '0');
+        if (!resultsBoxEl) return; // nothing to update
+
         if (salary <= 0) {
             resultsBoxEl.classList.add('hidden');
-            if (alloc50El) alloc50El.textContent = alloc30El.textContent = alloc20El.textContent = formatCurrency(0, 0);
-            if (needsEl) needsEl.textContent = wantsEl.textContent = savingsEl.textContent = formatCurrency(0, 0);
-            if (actual50El) actual50El.textContent = actual30El.textContent = actual20El.textContent = formatCurrency(0, 0);
-            if (alloc50HeaderEl) alloc50HeaderEl.textContent = alloc30HeaderEl.textContent = alloc20HeaderEl.textContent = formatCurrency(0, 0);
-            if (actual50HeaderEl) actual50HeaderEl.textContent = actual30HeaderEl.textContent = actual20HeaderEl.textContent = formatCurrency(0, 0);
+            if (alloc50El) alloc50El.textContent = formatCurrency(0, 0);
+            if (wantsEl) wantsEl.textContent = formatCurrency(0, 0);
+            if (savingsEl) savingsEl.textContent = formatCurrency(0, 0);
+            if (alloc50HeaderEl) alloc50HeaderEl.textContent = formatCurrency(0, 0);
+            if (alloc30HeaderEl) alloc30HeaderEl.textContent = formatCurrency(0, 0);
+            if (alloc20HeaderEl) alloc20HeaderEl.textContent = formatCurrency(0, 0);
+            if (actual50El) actual50El.textContent = formatCurrency(0, 0);
+            if (actual50HeaderEl) actual50HeaderEl.textContent = formatCurrency(0, 0);
+            if (actual30HeaderEl) actual30HeaderEl.textContent = formatCurrency(0, 0);
+            if (actual20HeaderEl) actual20HeaderEl.textContent = formatCurrency(0, 0);
+            // difference fields
+            const diff50 = document.getElementById('difference50');
+            const diff50Header = document.getElementById('difference50-header');
+            const diff30Header = document.getElementById('difference30-header');
+            const diff20Header = document.getElementById('difference20-header');
+            if (diff50) diff50.textContent = formatCurrency(0, 0);
+            if (diff50Header) diff50Header.textContent = formatCurrency(0, 0);
+            if (diff30Header) diff30Header.textContent = formatCurrency(0, 0);
+            if (diff20Header) diff20Header.textContent = formatCurrency(0, 0);
+
             state.salary = 0;
             state.allocated = { 50: 0, 30: 0, 20: 0 };
             state.actual = { 50: 0, 30: 0, 20: 0 };
             return;
         }
+
         resultsBoxEl.classList.remove('hidden');
         state.salary = salary;
         state.allocated[50] = salary * 0.5;
         state.allocated[30] = salary * 0.3;
         state.allocated[20] = salary * 0.2;
-        if (needsEl) needsEl.textContent = formatCurrency(state.allocated[50], 0);
+
+        // Update summary boxes
+        if (alloc50El) alloc50El.textContent = formatCurrency(state.allocated[50], 0);
         if (wantsEl) wantsEl.textContent = formatCurrency(state.allocated[30], 0);
         if (savingsEl) savingsEl.textContent = formatCurrency(state.allocated[20], 0);
-        if (alloc50El) alloc50El.textContent = formatCurrency(state.allocated[50], 0);
-        if (alloc30El) alloc30El.textContent = formatCurrency(state.allocated[30], 0);
-        if (alloc20El) alloc20El.textContent = formatCurrency(state.allocated[20], 0);
+
+        // Also update allocated30/allocated20 summary spans (top-level)
+        const alloc30ElTop = document.getElementById('allocated30');
+        const alloc20ElTop = document.getElementById('allocated20');
+        if (alloc30ElTop) alloc30ElTop.textContent = formatCurrency(state.allocated[30], 0);
+        if (alloc20ElTop) alloc20ElTop.textContent = formatCurrency(state.allocated[20], 0);
+
+        // Update headers
         if (alloc50HeaderEl) alloc50HeaderEl.textContent = formatCurrency(state.allocated[50], 0);
         if (alloc30HeaderEl) alloc30HeaderEl.textContent = formatCurrency(state.allocated[30], 0);
         if (alloc20HeaderEl) alloc20HeaderEl.textContent = formatCurrency(state.allocated[20], 0);
+
+        // Read actuals from DOM where available (allow numbers inside textContent or value)
+        const readActual = (el) => {
+            if (!el) return 0;
+            const v = (el.value !== undefined) ? el.value : el.textContent;
+            return parseCurrency(v) || 0;
+        };
+
+        const actual50Val = readActual(actual50El || actual50HeaderEl);
+        const actual30Val = readActual(actual30HeaderEl || document.getElementById('actual30'));
+        const actual20Val = readActual(actual20HeaderEl || document.getElementById('actual20'));
+
+        // Update actual displays (where present)
+        if (actual50El) actual50El.textContent = formatCurrency(actual50Val, 0);
+        if (actual50HeaderEl) actual50HeaderEl.textContent = formatCurrency(actual50Val, 0);
+        if (actual30HeaderEl) actual30HeaderEl.textContent = formatCurrency(actual30Val, 0);
+        if (actual20HeaderEl) actual20HeaderEl.textContent = formatCurrency(actual20Val, 0);
+        const actual30Top = document.getElementById('actual30');
+        const actual20Top = document.getElementById('actual20');
+        if (actual30Top) actual30Top.textContent = formatCurrency(actual30Val, 0);
+        if (actual20Top) actual20Top.textContent = formatCurrency(actual20Val, 0);
+
+        // Calculate and update differences
+        const diff50 = document.getElementById('difference50');
+        const diff50Header = document.getElementById('difference50-header');
+        const diff30Header = document.getElementById('difference30-header');
+        const diff20Header = document.getElementById('difference20-header');
+        const diff30Top = document.getElementById('difference30');
+        const diff20Top = document.getElementById('difference20');
+
+        const difference50 = state.allocated[50] - actual50Val;
+        const difference30 = state.allocated[30] - actual30Val;
+        const difference20 = state.allocated[20] - actual20Val;
+
+        if (diff50) diff50.textContent = formatCurrency(difference50, 0);
+        if (diff50Header) diff50Header.textContent = formatCurrency(difference50, 0);
+        if (diff30Header) diff30Header.textContent = formatCurrency(difference30, 0);
+        if (diff20Header) diff20Header.textContent = formatCurrency(difference20, 0);
+        if (diff30Top) diff30Top.textContent = formatCurrency(difference30, 0);
+        if (diff20Top) diff20Top.textContent = formatCurrency(difference20, 0);
+
         // Trigger section-specific updates
         if (window.AppNeeds && window.AppNeeds.updateLoan) window.AppNeeds.updateLoan();
         if (window.AppSavings && window.AppSavings.updateSIP) window.AppSavings.updateSIP();
@@ -187,11 +213,11 @@
 
     function showModal(type) {
         // Use fresh elements for modal and values
-        const elems = window.AppCommon ? window.AppCommon.getElements() : { modal: document.getElementById('modal'), modalTitle: document.getElementById('modalTitle'), modalContent: document.getElementById('modalContent'), needsAmount: document.getElementById('needsAmount'), wantsAmount: document.getElementById('wantsAmount'), savingsAmount: document.getElementById('savingsAmount') };
+        const elems = window.AppCommon ? window.AppCommon.getElements() : { modal: document.getElementById('modal'), modalTitle: document.getElementById('modalTitle'), modalContent: document.getElementById('modalContent'), allocated50: document.getElementById('allocated50'), wantsAmount: document.getElementById('wantsAmount'), savingsAmount: document.getElementById('savingsAmount') };
         const modalEl = elems.modal || modal;
         const modalTitleEl = elems.modalTitle || modalTitle;
         const modalContentEl = elems.modalContent || modalContent;
-        const needsEl = elems.needsAmount || document.getElementById('allocated50') || needsAmount;
+        const needsEl = elems.allocated50 || document.getElementById('allocated50') || allocated50;
         const wantsEl = elems.wantsAmount || wantsAmount;
         const savingsEl = elems.savingsAmount || savingsAmount;
 
@@ -220,15 +246,10 @@
         const get = id => document.getElementById(id);
         salaryInput = get('salary') || salaryInput;
         resultsBox = get('results') || resultsBox;
-        needsAmount = get('needsAmount') || needsAmount;
+        allocated50 = get('allocated50') || allocated50;
         wantsAmount = get('wantsAmount') || wantsAmount;
         savingsAmount = get('savingsAmount') || savingsAmount;
-        allocated50 = get('allocated50') || allocated50;
-        allocated30 = get('allocated30') || allocated30;
-        allocated20 = get('allocated20') || allocated20;
         actual50 = get('actual50') || actual50;
-        actual30 = get('actual30') || actual30;
-        actual20 = get('actual20') || actual20;
         allocated50Header = get('allocated50-header') || allocated50Header;
         allocated30Header = get('allocated30-header') || allocated30Header;
         allocated20Header = get('allocated20-header') || allocated20Header;
