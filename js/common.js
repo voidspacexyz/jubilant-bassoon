@@ -275,6 +275,9 @@
         accordions.forEach(btn => {
             if (!btn.hasAttribute('aria-expanded')) btn.setAttribute('aria-expanded', 'false');
         });
+
+        // If a salary value is already present on load, update all computed results
+        try { updateResults(); } catch (e) { /* fail-safe: avoid breaking initialization */ }
     }
 
     // Ensure initCommon runs once DOM is ready

@@ -4,6 +4,9 @@
     // Use common state and elements
     const { state, getElements, calculateEMI } = window.AppCommon;
 
+    // Internal bridge to expose inner helpers
+    const internals = {};
+
     function getCommonEls(){
         const e = getElements();
         return {
@@ -14,7 +17,10 @@
             everydayAmount: document.getElementById('everydayAmount'),
             emiDeduction: document.getElementById('emiDeduction'),
             plannedUsage: document.getElementById('plannedUsage'),
-            adjNeeds: document.getElementById('adjNeeds')
+            adjNeeds: document.getElementById('adjNeeds'),
+            // header elements for the accordion/header display
+            allocated50Header: e.allocated50Header || document.getElementById('allocated50-header'),
+            actual50Header: e.actual50Header || document.getElementById('actual50-header')
         };
     }
 
@@ -42,40 +48,45 @@
 
     function updateLoan() {
         cacheLoanEls();
+        // Prefer using internal calc if available (it updates UI and state)
+        if(internals.calcEmi && typeof internals.calcEmi === 'function'){
+            internals.calcEmi();
+            return;
+        }
         const els = getCommonEls();
         if(!els.needsAmount) return; // bail if DOM not ready
 
-        const loanAmt = parseCurrency(loanAmountInput?.value);
-        const down = parseCurrency(downpaymentInput?.value);
+        const loanAmt = Number((loanAmountInput?.value||'').replace(/,/g,'')) || 0;
+        const down = Number((downpaymentInput?.value||'').replace(/,/g,'')) || 0;
         const principal = Math.max(0, loanAmt - down);
         const tenure = parseInt(tenureInput?.value) || 0;
         const rate = parseFloat(interestInput?.value) || 0;
         if (!loanResults || loanAmt <= 0 || tenure <= 0) {
             loanResults?.classList.add('hidden');
-            if(emiAmount) emiAmount.textContent = formatCurrency(0,0);
-            if(totalPayment) totalPayment.textContent = formatCurrency(0,0);
-            if(principalAmount) principalAmount.textContent = formatCurrency(0,0);
-            if(interestAmount) interestAmount.textContent = formatCurrency(0,0);
+            if(emiAmount) emiAmount.textContent = new Intl.NumberFormat().format(0);
+            if(totalPayment) totalPayment.textContent = new Intl.NumberFormat().format(0);
+            if(principalAmount) principalAmount.textContent = new Intl.NumberFormat().format(0);
+            if(interestAmount) interestAmount.textContent = new Intl.NumberFormat().format(0);
             state.actual[50] = 0;
-            els.actual50.textContent = formatCurrency(0, 0);
+            els.actual50.textContent = new Intl.NumberFormat().format(0);
             return;
         }
         const calc = calculateEMI(principal, tenure, rate);
         loanResults.classList.remove('hidden');
-        emiAmount && (emiAmount.textContent = formatCurrency(calc.emi, 0));
-        totalPayment && (totalPayment.textContent = formatCurrency(calc.totalPayment, 0));
-        principalAmount && (principalAmount.textContent = formatCurrency(principal, 0));
-        interestAmount && (interestAmount.textContent = formatCurrency(calc.totalInterest, 0));
+        emiAmount && (emiAmount.textContent = new Intl.NumberFormat().format(Math.round(calc.emi)));
+        totalPayment && (totalPayment.textContent = new Intl.NumberFormat().format(Math.round(calc.totalPayment)));
+        principalAmount && (principalAmount.textContent = new Intl.NumberFormat().format(Math.round(principal)));
+        interestAmount && (interestAmount.textContent = new Intl.NumberFormat().format(Math.round(calc.totalInterest)));
 
         // Update needs-related displays
         const origNeeds = state.allocated[50];
         const everyday = origNeeds * 0.5;
-        const planned = everyday + calc.emi;
-        els.everydayAmount && (els.everydayAmount.textContent = formatCurrency(everyday, 0));
-        els.emiDeduction && (els.emiDeduction.textContent = formatCurrency(calc.emi, 0));
-        els.plannedUsage && (els.plannedUsage.textContent = formatCurrency(planned, 0));
+        const planned = everyday + Math.round(calc.emi);
+        els.everydayAmount && (els.everydayAmount.textContent = new Intl.NumberFormat().format(Math.round(everyday)));
+        els.emiDeduction && (els.emiDeduction.textContent = new Intl.NumberFormat().format(Math.round(calc.emi)));
+        els.plannedUsage && (els.plannedUsage.textContent = new Intl.NumberFormat().format(Math.round(planned)));
         const reserveAfter = origNeeds - planned;
-        els.adjNeeds && (els.adjNeeds.textContent = formatCurrency(reserveAfter, 0));
+        els.adjNeeds && (els.adjNeeds.textContent = new Intl.NumberFormat().format(Math.round(reserveAfter)));
         if (reserveAfter < 0) {
             els.adjNeeds && els.adjNeeds.classList.add('text-red-600', 'font-semibold');
         } else {
@@ -83,23 +94,29 @@
         }
         // Update actual50 (will be overridden by needs items if present)
         state.actual[50] = planned;
-        els.actual50 && (els.actual50.textContent = formatCurrency(state.actual[50], 0));
+        els.actual50 && (els.actual50.textContent = new Intl.NumberFormat().format(Math.round(state.actual[50])));
     }
 
     function initNeeds() {
         cacheLoanEls();
-        // Wire loan events
+        // If internals provide init behavior, call it
+        if(internals && typeof internals.loadState === 'function'){
+            // inner module already initialized on script load; ensure its event wiring is present
+            // nothing to do here other than ensure calc runs once
+            internals.calcEmi && internals.calcEmi();
+        }
+        // Wire loan events as fallback
         [loanAmountInput, tenureInput, interestInput, downpaymentInput].forEach(el => {
             if(el) el.addEventListener('input', updateLoan);
         });
     }
 
     function updateNeedsItems() {
-        // these helper functions are inside the IIFE; ensure they exist before calling
-        if(typeof updateSalaryFromInput === 'function') updateSalaryFromInput();
-        if(typeof computeDefaultsFromSalary === 'function') computeDefaultsFromSalary();
-        if(typeof renderItems === 'function') renderItems();
-        if(typeof updateStatus === 'function') updateStatus();
+        // call internal helpers if available
+        if(internals && typeof internals.updateSalaryFromInput === 'function') internals.updateSalaryFromInput();
+        if(internals && typeof internals.computeDefaultsFromSalary === 'function') internals.computeDefaultsFromSalary();
+        if(internals && typeof internals.renderItems === 'function') internals.renderItems();
+        if(internals && typeof internals.updateStatus === 'function') internals.updateStatus();
     }
 
     // Needs items feature (IIFE integrated)
@@ -271,7 +288,7 @@
         }
 
         function updateStatus(){
-            const { allocated50, actual50, needsAmount } = getCommonEls() || {};
+            const { allocated50, actual50, needsAmount, allocated50Header, actual50Header } = getCommonEls() || {};
             const total = items.reduce((s,it)=>{
                 if(it.mode === 'percent'){
                     const amt = state.allocated[50] ? Math.round((Number(it.percentOfNeeds||0)/100) * state.allocated[50]) : 0;
@@ -293,8 +310,14 @@
             });
 
             if(allocated50) allocated50.textContent = fmt(state.allocated[50]);
+            // keep header allocated in sync
+            if(allocated50Header) allocated50Header.textContent = fmt(state.allocated[50]);
+
             state.actual[50] = total + includedEmi;
             if(actual50) actual50.textContent = fmt(state.actual[50]);
+            // update header actual as well
+            if(actual50Header) actual50Header.textContent = fmt(state.actual[50]);
+
             if(needsAmount) needsAmount.textContent = fmt(total + includedEmi);
             const everydayEl = document.getElementById('everydayAmount');
             const adjEl = document.getElementById('adjNeeds');
@@ -373,5 +396,15 @@
         renderItems();
         calcEmi();
         updateStatus();
+
+        // expose internals for outer scope
+        internals.loadState = loadState;
+        internals.updateSalaryFromInput = updateSalaryFromInput;
+        internals.computeDefaultsFromSalary = computeDefaultsFromSalary;
+        internals.renderItems = renderItems;
+        internals.updateStatus = updateStatus;
+        internals.calcEmi = calcEmi;
+        internals.getItems = () => items;
+        internals.getEmi = () => emi;
     })();
 })();
