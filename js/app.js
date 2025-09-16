@@ -58,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsBox.classList.add('hidden');
             allocated50.textContent = allocated30.textContent = allocated20.textContent = formatCurrency(0,0);
             needsAmount.textContent = wantsAmount.textContent = savingsAmount.textContent = formatCurrency(0,0);
-            // keep actuals at 0 until explicit loan/SIP inputs provided
             actual50.textContent = actual30.textContent = actual20.textContent = formatCurrency(0,0);
             return;
         }
@@ -73,10 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         allocated30.textContent = formatCurrency(wants,0);
         allocated20.textContent = formatCurrency(savings,0);
 
-        // reset actuals by default; loan/SIP update functions will set them if applicable
-        actual50.textContent = actual30.textContent = actual20.textContent = formatCurrency(0,0);
-
-        // trigger loan/SIP updates which may set actuals if inputs valid
+        // do not reset actuals, let updateLoan and updateSIP set them if applicable
         updateLoan();
         updateSIP();
     }
@@ -126,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update related displays
         everydayAmount.textContent = formatCurrency(everyday,0);
-        emiDeduct.textContent = formatCurrency(calc.emi,0);
+        emiDeduction.textContent = formatCurrency(calc.emi,0);
         plannedUsage.textContent = formatCurrency(planned,0);
         const reserveAfter = origNeeds - planned;
         adjNeeds.textContent = formatCurrency(reserveAfter,0);
@@ -134,13 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
             adjNeeds.classList.add('text-red-600','font-semibold');
         } else {
             adjNeeds.classList.remove('text-red-600','font-semibold');
-        }
-
-        // set actual50 only when emi > 0 (i.e., loan exists)
-        if (calc.emi > 0) {
-            actual50.textContent = formatCurrency(planned,0);
-        } else {
-            actual50.textContent = formatCurrency(0,0);
         }
     }
 
@@ -281,7 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...it,
                 value: Number(it.value) || 0,
                 mode: it.mode || 'amount',
-                percentOfNeeds: isFinite(Number(it.percentOfNeeds)) ? Number(it.percentOfNeeds) : (it.percentOfNeeds || 0)
+                percentOfNeeds: isFinite(Number(it.percentOfNeeds)) ? Number(it.percentOfNeeds) : (it.percentOfNeeds || 0),
+                fromDefault: defaultItems.some(d => d.id === it.id) ? true : (it.fromDefault || false)
             }));
         }
     }
@@ -411,17 +401,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const includedEmi = (includeEmiInNeeds.checked && emi > 0) ? emi : 0;
         const remaining = Math.round(needsBucket - total - includedEmi);
         // Difference is remaining (positive means unallocated available, negative means over-allocated)
-        const diffEl = qs('#difference50');
-        if(diffEl){
-            diffEl.textContent = fmt(remaining);
+        qsa('#difference50').forEach(el=>{
+            el.textContent = fmt(remaining);
             if(remaining < 0){
-                diffEl.classList.remove('text-green-600');
-                diffEl.classList.add('text-red-700','font-bold');
+                el.classList.remove('text-green-600');
+                el.classList.add('text-red-700','font-bold');
             } else {
-                diffEl.classList.remove('text-red-700','font-bold');
-                diffEl.classList.add('text-green-600');
+                el.classList.remove('text-red-700','font-bold');
+                el.classList.add('text-green-600');
             }
-        }
+        });
 
         // update displays
         qsa('#allocated50').forEach(el=>el.textContent = fmt(needsBucket));
@@ -438,8 +427,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const allocated30Val = Math.round(salaryVal * 0.3);
         const allocated20Val = Math.round(salaryVal * 0.2);
         // For this change, we borrow same values for each accordion: use actual50Value for others' actuals
-        const actual30Val = actual50Value;
-        const actual20Val = actual50Value;
+        const actual30Val = 0;
+        const monthly = parseCurrency(qs('#sipAmount').value);
+        const years = parseInt(qs('#sipTenure').value) || 0;
+        const invested = monthly * years * 12;
+        const actual20Val = invested;
 
         // Update DOM
         qsa('#allocated30').forEach(el=>el.textContent = fmt(allocated30Val));
@@ -451,29 +443,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const diff30 = Math.round(allocated30Val - actual30Val);
         const diff20 = Math.round(allocated20Val - actual20Val);
 
-        const diff30El = qs('#difference30');
-        if(diff30El){
-            diff30El.textContent = fmt(diff30);
+        qsa('#difference30').forEach(el=>{
+            el.textContent = fmt(diff30);
             if(diff30 < 0){
-                diff30El.classList.remove('text-green-600');
-                diff30El.classList.add('text-red-700','font-bold');
+                el.classList.remove('text-green-600');
+                el.classList.add('text-red-700','font-bold');
             } else {
-                diff30El.classList.remove('text-red-700','font-bold');
-                diff30El.classList.add('text-green-600');
+                el.classList.remove('text-red-700','font-bold');
+                el.classList.add('text-green-600');
             }
-        }
+        });
 
-        const diff20El = qs('#difference20');
-        if(diff20El){
-            diff20El.textContent = fmt(diff20);
+        qsa('#difference20').forEach(el=>{
+            el.textContent = fmt(diff20);
             if(diff20 < 0){
-                diff20El.classList.remove('text-green-600');
-                diff20El.classList.add('text-red-700','font-bold');
+                el.classList.remove('text-green-600');
+                el.classList.add('text-red-700','font-bold');
             } else {
-                diff20El.classList.remove('text-red-700','font-bold');
-                diff20El.classList.add('text-green-600');
+                el.classList.remove('text-red-700','font-bold');
+                el.classList.add('text-green-600');
             }
-        }
+        });
     }
 
     // EMI calculations
@@ -542,6 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
         computeDefaultsFromSalary();
         renderItems();
         updateStatus();
+        updateResults();
     });
 
     const debouncedCalc = debounce(calcEmi, 350);
