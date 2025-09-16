@@ -47,8 +47,24 @@ File: js/app.js
     - Accordion toggle handlers
         - Expand/collapse planner sections.
 
+File: js/common.js
+- Purpose: Shared state management, common DOM elements, and core utilities (e.g., updateResults, calculateEMI, modal, accordion handlers).
+- Key features: Centralizes salary, allocated/actual values; exposes via window.AppCommon for modularity.
+
+File: js/needs.js
+- Purpose: Handles the 50% needs allocation, including loan/EMI calculations and the detailed needs items list with localStorage.
+- Key features: Integrates needs items IIFE; updates actual50 based on items and EMI.
+
+File: js/wants.js
+- Purpose: Manages the 30% wants allocation (minimal for now; placeholder for future features like expense tracking).
+- Key features: Updates allocated30 and actual30 (currently 0).
+
+File: js/savings.js
+- Purpose: Handles the 20% savings allocation, including SIP calculations.
+- Key features: Computes future value, invested amount; updates actual20.
+
 Notes and Next Steps
-- The JavaScript is modularized into two files: formatters.js for helpers and app.js for app logic. This makes testing and reuse easier.
-- You can extend formatters.js with localization-aware currency support or more robust parsing.
-- Move additional UI-specific styles into css/styles.css when needed; Tailwind covers the bulk of layout and design.
-- If you want, I can further split app.js into separate modules (loan.js, sip.js, ui.js) for even better separation.
+- The JavaScript is now modularized into separate files: common.js for shared logic, needs.js for needs-specific features, wants.js for wants, and savings.js for savings. This improves maintainability and testing.
+- common.js acts as the central hub, with other files accessing shared state via window.AppCommon.
+- You can extend individual files (e.g., add features to wants.js) without affecting others.
+- If you want further splitting (e.g., extract modal/accordion to ui.js), let me know.
