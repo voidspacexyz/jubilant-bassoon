@@ -134,15 +134,11 @@
         const needsItemsContainer = qs('#needsItems');
         const addNeedBtn = qs('#addNeedItem');
         const resetNeedsBtn = qs('#resetNeeds');
-        const loanAmount = qs('#loanAmount');
-        const tenure = qs('#tenure');
-        const interestRate = qs('#interestRate');
-        const downpayment = qs('#downpayment');
         const includeEmiInNeeds = qs('#includeEmiInNeeds');
         const emiAmountDisplay = qs('#emiAmount');
-        const loanResults = qs('#loanResults');
 
         const NEEDS_KEY = 'costplanner.needs.v1';
+        const LOANS_KEY = 'costplanner.loans.v1';
 
         // Default items
         const defaultItems = [
@@ -157,9 +153,10 @@
 
         // State
         let items = [];
-        let emi = 0;
+        let loans = [];
+        let emi = 0; // aggregated EMI
 
-        // Load/init
+        // Load/init: needs items
         function loadState(){
             const raw = localStorage.getItem(NEEDS_KEY);
             if(raw){
@@ -182,6 +179,30 @@
             localStorage.setItem(NEEDS_KEY, JSON.stringify(items));
         }
 
+        // Loan persistence
+        function loadLoans(){
+            const raw = localStorage.getItem(LOANS_KEY);
+            if(raw){
+                try{ loans = JSON.parse(raw); } catch(e){ loans = []; }
+            }
+            if(!Array.isArray(loans)) loans = [];
+            // normalize
+            loans = loans.map(l=>({
+                id: l.id || `loan_${Date.now()}`,
+                label: l.label || 'Loan',
+                amount: Number(l.amount) || 0,
+                tenure: Number(l.tenure) || 0,
+                interest: Number(l.interest) || 0,
+                downpayment: Number(l.downpayment) || 0,
+                includeInNeeds: !!l.includeInNeeds
+            }));
+        }
+
+        function saveLoans(){
+            localStorage.setItem(LOANS_KEY, JSON.stringify(loans));
+        }
+
+        // Update salary from outer input
         function updateSalaryFromInput(){
             const { salaryInput } = getCommonEls() || {};
             const v = Number((salaryInput?.value||'').replace(/,/g,''));
@@ -200,6 +221,169 @@
             });
         }
 
+        // Loans UI
+        function renderLoansUI(){
+            let wrapper = qs('#loansContainer');
+            if(!wrapper){
+                wrapper = document.createElement('div');
+                wrapper.id = 'loansContainer';
+                wrapper.className = 'space-y-3';
+                // Insert before needsItemsContainer if present, else append to body
+                if(needsItemsContainer && needsItemsContainer.parentNode){
+                    needsItemsContainer.parentNode.insertBefore(wrapper, needsItemsContainer);
+                } else {
+                    document.body.appendChild(wrapper);
+                }
+            }
+            wrapper.innerHTML = '';
+
+            const header = document.createElement('div');
+            header.className = 'p-3 bg-yellow-50 border border-yellow-100 rounded';
+            header.innerHTML = '<strong class="block">Loans (Needs)</strong><p class="text-sm text-gray-700">Only add loans here if they are absolutely necessary for living or servicing debt that cannot be moved to Wants. Consider adding discretionary loans or planned purchases under Wants instead.</p>';
+            wrapper.appendChild(header);
+
+            const list = document.createElement('div');
+            list.className = 'space-y-2';
+
+            loans.forEach((ln, idx)=>{
+                const card = document.createElement('div');
+                card.className = 'p-3 bg-white border rounded flex flex-col gap-2';
+                card.setAttribute('data-id', ln.id);
+
+                const topRow = document.createElement('div');
+                topRow.className = 'flex items-center justify-between gap-2';
+
+                const title = document.createElement('div');
+                title.className = 'flex-1';
+                const lbl = document.createElement('input');
+                lbl.type = 'text';
+                lbl.value = ln.label;
+                lbl.className = 'w-full px-2 py-1 border rounded text-sm';
+                lbl.setAttribute('aria-label', 'Loan label');
+                lbl.addEventListener('input', e=>{ ln.label = e.target.value; saveLoans(); renderLoansUI(); });
+                title.appendChild(lbl);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'px-2 py-1 bg-red-50 text-red-600 rounded text-sm';
+                removeBtn.textContent = 'Remove';
+                removeBtn.addEventListener('click', ()=>{ loans.splice(idx,1); saveLoans(); renderLoansUI(); calcEmiInternal(); });
+
+                topRow.appendChild(title);
+                topRow.appendChild(removeBtn);
+
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-2 md:grid-cols-4 gap-2';
+
+                const amt = document.createElement('input'); amt.type='text'; amt.value = fmt(ln.amount); amt.className='px-2 py-1 border rounded'; amt.setAttribute('aria-label','Loan amount');
+                const ten = document.createElement('input'); ten.type='number'; ten.value = ln.tenure || ''; ten.className='px-2 py-1 border rounded'; ten.setAttribute('aria-label','Tenure (months)');
+                const intr = document.createElement('input'); intr.type='number'; intr.value = ln.interest || ''; intr.className='px-2 py-1 border rounded'; intr.setAttribute('aria-label','Interest (%)');
+                const down = document.createElement('input'); down.type='text'; down.value = fmt(ln.downpayment); down.className='px-2 py-1 border rounded'; down.setAttribute('aria-label','Downpayment');
+
+                amt.addEventListener('input', e=>{ const v = Number(e.target.value.replace(/,/g,'')); ln.amount = isFinite(v)?v:0; saveLoans(); requestCalc(); });
+                ten.addEventListener('input', e=>{ ln.tenure = Number(e.target.value)||0; saveLoans(); requestCalc(); });
+                intr.addEventListener('input', e=>{ ln.interest = Number(e.target.value)||0; saveLoans(); requestCalc(); });
+                down.addEventListener('input', e=>{ const v = Number(e.target.value.replace(/,/g,'')); ln.downpayment = isFinite(v)?v:0; saveLoans(); requestCalc(); });
+
+                row.appendChild(amt);
+                row.appendChild(ten);
+                row.appendChild(intr);
+                row.appendChild(down);
+
+                const foot = document.createElement('div');
+                foot.className = 'flex items-center justify-between gap-2';
+
+                const includeWrap = document.createElement('label');
+                includeWrap.className = 'flex items-center gap-2 text-sm';
+                const includeChk = document.createElement('input'); includeChk.type='checkbox'; includeChk.checked = !!ln.includeInNeeds;
+                includeChk.addEventListener('change', ()=>{ ln.includeInNeeds = includeChk.checked; saveLoans(); calcEmiInternal(); });
+                includeWrap.appendChild(includeChk);
+                includeWrap.appendChild(document.createTextNode('Include EMI in Needs'));
+
+                const emiDisplay = document.createElement('div'); emiDisplay.className='text-sm font-medium'; emiDisplay.textContent = 'EMI: ' + fmt(0); emiDisplay.setAttribute('data-emi','0');
+
+                foot.appendChild(includeWrap);
+                foot.appendChild(emiDisplay);
+
+                card.appendChild(topRow);
+                card.appendChild(row);
+                card.appendChild(foot);
+
+                list.appendChild(card);
+            });
+
+            wrapper.appendChild(list);
+
+            const controls = document.createElement('div');
+            controls.className = 'flex gap-2';
+            const addBtn = document.createElement('button');
+            addBtn.type='button'; addBtn.id='addLoanBtn'; addBtn.className='px-3 py-2 bg-blue-600 text-white rounded'; addBtn.textContent='Add Loan';
+            addBtn.addEventListener('click', addLoan);
+            controls.appendChild(addBtn);
+
+            if(loans.length>0){
+                const clearBtn = document.createElement('button');
+                clearBtn.type='button'; clearBtn.className='px-3 py-2 bg-red-50 text-red-600 rounded'; clearBtn.textContent='Clear All Loans';
+                clearBtn.addEventListener('click', ()=>{ if(confirm('Remove all loans?')){ loans = []; saveLoans(); renderLoansUI(); calcEmiInternal(); } });
+                controls.appendChild(clearBtn);
+            }
+
+            wrapper.appendChild(controls);
+
+            // Update any displayed aggregated EMI at top-level
+            updateAggregatedEmiDisplay();
+        }
+
+        function addLoan(){
+            const label = prompt('Label for loan (e.g. Home loan, Car loan)') || `Loan ${loans.length+1}`;
+            const suggestion = { amount:0, tenure:60, interest:8, downpayment:0 };
+            const loan = { id: `loan_${Date.now()}`, label, ...suggestion, includeInNeeds: true };
+            loans.push(loan);
+            saveLoans();
+            renderLoansUI();
+            calcEmiInternal();
+        }
+
+        function updateAggregatedEmiDisplay(){
+            if(emiAmountDisplay) emiAmountDisplay.textContent = fmt(emi);
+        }
+
+        function calcEmi(){
+            // compute EMI per loan and aggregate
+            let totalEmi = 0;
+            loans.forEach((l)=>{
+                const loanAmt = Math.max(0, (Number(l.amount) || 0) - (Number(l.downpayment)||0));
+                const n = Number(l.tenure) || 0;
+                const r = Number(l.interest) || 0;
+                let monthly = 0;
+                if(!(loanAmt>0 && n>0)){
+                    monthly = 0;
+                } else {
+                    const rr = r/1200;
+                    if(rr === 0){ monthly = loanAmt / n; } else { monthly = loanAmt * rr * Math.pow(1+rr,n)/(Math.pow(1+rr,n)-1); }
+                }
+                const m = Math.round(monthly);
+                // update card display if present
+                const card = qs(`[data-id="${l.id}"]`);
+                if(card){
+                    const emiEl = card.querySelector('[data-emi]');
+                    emiEl && (emiEl.textContent = 'EMI: ' + fmt(m));
+                }
+                // include in aggregate only if flagged
+                if(l.includeInNeeds) totalEmi += m;
+            });
+            emi = totalEmi;
+            updateAggregatedEmiDisplay();
+            // update other loan result fields if they exist
+            qs('#loanResults') && qs('#loanResults').classList.toggle('hidden', loans.length===0);
+            // also update the old single-loan displays for backward compat
+            qs('#emiAmount') && (qs('#emiAmount').textContent = fmt(emi));
+            // Refresh needs status which uses emi
+            updateStatus();
+            saveLoans();
+        }
+
+        // Needs items rendering and status (mostly reused)
         function renderItems(){
             if(!needsItemsContainer) return;
             needsItemsContainer.innerHTML = '';
@@ -296,7 +480,10 @@
                 }
                 return s + (Number(it.value)||0);
             }, 0);
-            const includedEmi = (includeEmiInNeeds?.checked && emi > 0) ? emi : 0;
+            // Read the include-EMI checkbox state directly from the DOM each time
+            const includeChkEl = document.getElementById('includeEmiInNeeds');
+            const includeChecked = includeChkEl ? !!includeChkEl.checked : true;
+            const includedEmi = (includeChecked && emi > 0) ? emi : 0;
             const remaining = Math.round(state.allocated[50] - total - includedEmi);
             qsa('#difference50, #difference50-header').forEach(el=>{
                 el.textContent = fmt(remaining);
@@ -326,40 +513,45 @@
             saveState();
         }
 
-        function calcEmi(){
-            const rawLoan = Number((loanAmount?.value||'').replace(/,/g,''));
-            const rawDown = Number((downpayment?.value||'').replace(/,/g,''));
-            const n = Number(tenure?.value) || 0;
-            const rawInterest = Number(interestRate?.value) || 0;
-
-            if(!(rawLoan > 0 && n > 0) ){
-                emi = 0; loanResults?.classList.add('hidden'); if(emiAmountDisplay) emiAmountDisplay.textContent = fmt(0); updateStatus(); return;
-            }
-
-            const down = isFinite(rawDown) ? rawDown : 0;
-            if(down < 0 || down >= rawLoan){
-                emi = 0; loanResults?.classList.add('hidden'); if(emiAmountDisplay) emiAmountDisplay.textContent = fmt(0); updateStatus(); return;
-            }
-
-            const P = rawLoan - down;
-            const r = rawInterest/1200;
-            let monthly = 0;
-            if(r === 0){
-                monthly = P / n;
-            } else {
-                monthly = P * r * Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
-            }
-            emi = Math.round(monthly);
-            loanResults?.classList.remove('hidden');
-            if(emiAmountDisplay) emiAmountDisplay.textContent = fmt(emi);
-
-            const totalPayment = Math.round(monthly * n);
-            qs('#totalPayment') && (qs('#totalPayment').textContent = fmt(totalPayment));
-            qs('#principalAmount') && (qs('#principalAmount').textContent = fmt(P));
-            qs('#interestAmount') && (qs('#interestAmount').textContent = fmt(totalPayment - P));
-
+        // internal calc with debounce
+        const calcEmiInternal = debounce(()=>{
+            // reuse the main calculation implementation
+            let totalEmi = 0;
+            loans.forEach((l)=>{
+                const loanAmt = Math.max(0, (Number(l.amount) || 0) - (Number(l.downpayment)||0));
+                const n = Number(l.tenure) || 0;
+                const r = Number(l.interest) || 0;
+                let monthly = 0;
+                if(!(loanAmt>0 && n>0)){
+                    monthly = 0;
+                } else {
+                    const rr = r/1200;
+                    if(rr === 0){ monthly = loanAmt / n; } else { monthly = loanAmt * rr * Math.pow(1+rr,n)/(Math.pow(1+rr,n)-1); }
+                }
+                const m = Math.round(monthly);
+                if(l.includeInNeeds) totalEmi += m;
+            });
+            emi = totalEmi;
+            updateAggregatedEmiDisplay();
+            qs('#emiAmount') && (qs('#emiAmount').textContent = fmt(emi));
             updateStatus();
+            saveLoans();
+        }, 250);
+
+        // Safe request to calculate EMI — uses calcEmiInternal if available, otherwise schedules a short retry
+        function requestCalc(){
+            try{
+                if(typeof calcEmiInternal === 'function'){
+                    calcEmiInternal();
+                } else {
+                    setTimeout(()=>{ if(typeof calcEmiInternal === 'function') calcEmiInternal(); }, 50);
+                }
+            }catch(e){
+                setTimeout(()=>{ if(typeof calcEmiInternal === 'function') calcEmiInternal(); }, 50);
+            }
         }
+
+        const debouncedCalc = calcEmiInternal;
 
         function addCustomItem(){
             const name = prompt('Enter item name');
@@ -381,9 +573,12 @@
         }
 
         // Wire events
-        const debouncedCalc = debounce(calcEmi, 350);
-        [loanAmount, tenure, interestRate, downpayment].forEach(el=> el && el.addEventListener('input', debouncedCalc));
-        [loanAmount, tenure, interestRate, downpayment].forEach(el=> el && el.addEventListener('blur', calcEmi));
+        // Reuse any existing input elements for backward compat by binding changes to recalc loans
+        ['loanAmount','tenure','interestRate','downpayment'].forEach(id=>{
+            const el = qs('#'+id);
+            if(el) el.addEventListener('input', ()=>{ /* prefer new multi-loan UI, but fallback */ calcEmiInternal(); });
+        });
+
         includeEmiInNeeds && includeEmiInNeeds.addEventListener('change', ()=> updateStatus());
 
         addNeedBtn && addNeedBtn.addEventListener('click', addCustomItem);
@@ -391,10 +586,12 @@
 
         // Init
         loadState();
+        loadLoans();
         updateSalaryFromInput();
         computeDefaultsFromSalary();
         renderItems();
-        calcEmi();
+        renderLoansUI();
+        calcEmiInternal();
         updateStatus();
 
         // expose internals for outer scope
@@ -403,7 +600,7 @@
         internals.computeDefaultsFromSalary = computeDefaultsFromSalary;
         internals.renderItems = renderItems;
         internals.updateStatus = updateStatus;
-        internals.calcEmi = calcEmi;
+        internals.calcEmi = calcEmiInternal;
         internals.getItems = () => items;
         internals.getEmi = () => emi;
     })();

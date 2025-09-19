@@ -147,7 +147,29 @@
                             <svg class="chev w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div class="accordion-body hidden p-4">
-                            <p class="text-sm text-gray-500">No items yet.</p>
+                            <!-- Dynamic Wants item list rendered by JS -->
+                            <div id="wantsItems" class="space-y-3" aria-live="polite"></div>
+
+                            <div class="flex items-center justify-end mt-3">
+                                <div class="flex gap-2">
+                                    <button id="resetWants" class="px-3 py-1 bg-gray-100 rounded text-sm">Reset to defaults</button>
+                                    <button id="addWantItem" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Add item</button>
+                                </div>
+                            </div>
+
+                            <!-- Wants loans section -->
+                            <div id="wantsLoanForm" class="mt-4">
+                                <h4 class="text-sm font-semibold mb-2">Wants Loans (e.g., Gadget, Vacation)</h4>
+                                <div id="wantsLoansContainer" class="space-y-3"></div>
+                                <div class="flex items-center gap-2 mt-3">
+                                    <input id="includeEmiInWants" type="checkbox" class="h-4 w-4" />
+                                    <label for="includeEmiInWants" class="text-sm text-gray-700">Include EMI inside 30% Wants</label>
+                                </div>
+                                <div id="wantsLoanResults" class="hidden mt-4">
+                                    <h3 class="text-sm font-semibold mb-2">Loan Calculation</h3>
+                                    <p class="text-sm font-bold text-blue-600">Monthly EMI: <span id="emiAmountWants">0</span></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

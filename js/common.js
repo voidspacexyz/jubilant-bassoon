@@ -146,16 +146,10 @@
         if (alloc30HeaderEl) alloc30HeaderEl.textContent = formatCurrency(state.allocated[30], 0);
         if (alloc20HeaderEl) alloc20HeaderEl.textContent = formatCurrency(state.allocated[20], 0);
 
-        // Read actuals from DOM where available (allow numbers inside textContent or value)
-        const readActual = (el) => {
-            if (!el) return 0;
-            const v = (el.value !== undefined) ? el.value : el.textContent;
-            return parseCurrency(v) || 0;
-        };
-
-        const actual50Val = readActual(actual50El || actual50HeaderEl);
-        const actual30Val = readActual(actual30HeaderEl || document.getElementById('actual30'));
-        const actual20Val = readActual(actual20HeaderEl || document.getElementById('actual20'));
+        // Read actuals from state (updated by section-specific functions)
+        const actual50Val = state.actual[50];
+        const actual30Val = state.actual[30];
+        const actual20Val = state.actual[20];
 
         // Update actual displays (where present)
         if (actual50El) actual50El.textContent = formatCurrency(actual50Val, 0);
@@ -189,7 +183,7 @@
         // Trigger section-specific updates
         if (window.AppNeeds && window.AppNeeds.updateLoan) window.AppNeeds.updateLoan();
         if (window.AppSavings && window.AppSavings.updateSIP) window.AppSavings.updateSIP();
-        if (window.AppWants && window.AppWants.updateWants) window.AppWants.updateWants();
+        if (window.AppWants && window.AppWants.updateWantsItems) window.AppWants.updateWantsItems();
         // Also trigger needs items update
         if (window.AppNeeds && window.AppNeeds.updateNeedsItems) window.AppNeeds.updateNeedsItems();
     }
